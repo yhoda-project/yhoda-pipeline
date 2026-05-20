@@ -82,6 +82,7 @@ jobs:
       PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DWP_API_KEY: ${{ secrets.DWP_API_KEY }}
+      NOMIS_API_KEY: ${{ secrets.NOMIS_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
