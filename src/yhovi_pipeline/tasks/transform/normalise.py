@@ -533,9 +533,22 @@ def normalise_dwp(
         how="left",
     )
 
-    missing_pop = merged["population"].isna().sum()
-    if missing_pop:
-        logger.warning("%d rows dropped — no matching population estimate for year", missing_pop)
+    missing_mask = merged["population"].isna()
+    if missing_mask.any():
+        latest_pop = (
+            pop_df.sort_values("year")
+            .groupby("lad_code", as_index=False)
+            .last()[["lad_code", "population"]]
+            .rename(columns={"population": "latest_population"})
+        )
+        merged = merged.merge(latest_pop, on="lad_code", how="left")
+        merged.loc[missing_mask, "population"] = merged.loc[missing_mask, "latest_population"]
+        merged = merged.drop(columns=["latest_population"])
+        logger.warning(
+            "%d rows used most recent available population (no estimate for exact year)",
+            missing_mask.sum(),
+        )
+
     merged = merged.dropna(subset=["population", "value"])
     merged = merged[merged["population"] > 0]
 
