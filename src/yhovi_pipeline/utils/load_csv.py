@@ -18,7 +18,7 @@ import re
 from datetime import UTC, date, datetime
 
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from yhovi_pipeline.config import YORKSHIRE_LAD_CODES, get_settings
@@ -360,51 +360,6 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "source": "nomis",
         "subdomain": "Employment and Jobs",
     },
-    # -----------------------------------------------------------------------
-    # Earnings and Income — ASHE Table 8 (percentiles)
-    # -----------------------------------------------------------------------
-    "eei10": {
-        "indicator_id": "p10_weekly_earnings",
-        "indicator_name": "10th percentile of gross weekly earnings",
-        "unit": "£",
-        "source": "ashe",
-        "subdomain": "Earnings and Income",
-    },
-    "eei80": {
-        "indicator_id": "p80_weekly_earnings",
-        "indicator_name": "80th percentile of gross weekly earnings",
-        "unit": "£",
-        "source": "ashe",
-        "subdomain": "Earnings and Income",
-    },
-    # -----------------------------------------------------------------------
-    # Natural Environment — ONS Access to gardens and public green space (2020)
-    # No preprocessed data on drive yet — entries here for when CSVs arrive.
-    # -----------------------------------------------------------------------
-    "eneos": {
-        "indicator_id": "pct_properties_private_outdoor_space",
-        "indicator_name": "Proportion of properties with access to private outdoor space",
-        "unit": "%",
-        "source": "ons",
-        "subdomain": "Natural Environment",
-    },
-    "enep": {
-        "indicator_id": "avg_distance_nearest_park_m",
-        "indicator_name": "Average distance to nearest park, public garden or playing field",
-        "unit": "m",
-        "source": "ons",
-        "subdomain": "Natural Environment",
-    },
-    # -----------------------------------------------------------------------
-    # Earnings and Income — derived: P80/P10 ratio from eei10 and eei80
-    # -----------------------------------------------------------------------
-    "eeiratio": {
-        "indicator_id": "p80_p10_earnings_ratio",
-        "indicator_name": "Ratio of 80th to 10th percentile gross weekly earnings (P80/P10)",
-        "unit": "ratio",
-        "source": "ashe",
-        "subdomain": "Earnings and Income",
-    },
 }
 
 
@@ -586,8 +541,6 @@ CSV_FILES: list[tuple[str, str]] = [
     ("enz_co2", "enz/carbondioxide/enz_carbondioxide_preprocessed_v1_7.csv"),
     ("enz_ch4", "enz/methane/enz_methane_preprocessed_v1_7.csv"),
     ("enz_n2o", "enz/nitrousoxide/enz_nitrousoxide_preprocessed_v1_7.csv"),
-    ("eei10", "eeigi/10percentile/eeigi_10_preprocessing_v1_5.csv"),
-    ("eei80", "eeigi/80percentile/eeigi_80_preprocessing_v1_5.csv"),
     ("eejpei_w", "eejpei/eejpei_w/eejpei_w_preprocessed_v3.csv"),
     ("eejpei_dw", "eejpei/eejpei_dw/eejpei_dw_preprocessed_v3.csv"),
 ]
@@ -698,114 +651,6 @@ def load_long_dataset(
     return len(records)
 
 
-def derive_eeiratio() -> int:
-    """Derive the P80/P10 earnings ratio from p10/p80 already in the indicator table.
-
-    Queries p10_weekly_earnings and p80_weekly_earnings, joins on geography_code
-    and reference_period, and upserts the ratio as p80_p10_earnings_ratio.
-    """
-    meta = DATASET_REGISTRY["eeiratio"]
-    settings = get_settings()
-    engine = create_engine(settings.database_url.get_secret_value())
-
-    with engine.connect() as conn:
-        rows = conn.execute(
-            text(
-                "SELECT indicator_id, geography_code, geography_name, lad_code, lad_name, reference_period, value "
-                "FROM indicator "
-                "WHERE indicator_id IN ('p10_weekly_earnings', 'p80_weekly_earnings') "
-                "AND geography_level = 'lad'"
-            )
-        ).fetchall()
-
-    if not rows:
-        print("  No source data for eeiratio (eei10/eei80 not yet loaded)")
-        return 0
-
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            "indicator_id",
-            "geography_code",
-            "geography_name",
-            "lad_code",
-            "lad_name",
-            "reference_period",
-            "value",
-        ],
-    )
-
-    p10 = df[df["indicator_id"] == "p10_weekly_earnings"].rename(columns={"value": "p10"})
-    p80 = df[df["indicator_id"] == "p80_weekly_earnings"].rename(columns={"value": "p80"})
-
-    merged = pd.merge(
-        p10[
-            ["geography_code", "geography_name", "lad_code", "lad_name", "reference_period", "p10"]
-        ],
-        p80[["geography_code", "reference_period", "p80"]],
-        on=["geography_code", "reference_period"],
-    )
-    merged = merged.dropna(subset=["p10", "p80"])
-    merged = merged[merged["p10"] > 0]
-
-    if merged.empty:
-        print("  No overlapping p10/p80 rows for eeiratio")
-        return 0
-
-    now = datetime.now(UTC)
-    result = pd.DataFrame(
-        {
-            "indicator_id": meta["indicator_id"],
-            "indicator_name": meta["indicator_name"],
-            "geography_code": merged["geography_code"],
-            "geography_name": merged["geography_name"],
-            "geography_level": "lad",
-            "lad_code": merged["lad_code"],
-            "lad_name": merged["lad_name"],
-            "reference_period": merged["reference_period"],
-            "value": merged["p80"] / merged["p10"],
-            "unit": meta["unit"],
-            "source": meta["source"],
-            "dataset_code": "eeiratio",
-            "breakdown_category": "",
-            "is_forecast": False,
-            "forecast_model": None,
-            "created_at": now,
-            "updated_at": now,
-        }
-    )
-
-    records = result.to_dict(orient="records")
-
-    stmt = pg_insert(Indicator).values(records)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=[
-            "indicator_id",
-            "geography_code",
-            "reference_period",
-            "breakdown_category",
-        ],
-        set_={
-            "indicator_name": stmt.excluded.indicator_name,
-            "geography_name": stmt.excluded.geography_name,
-            "geography_level": stmt.excluded.geography_level,
-            "lad_code": stmt.excluded.lad_code,
-            "lad_name": stmt.excluded.lad_name,
-            "value": stmt.excluded.value,
-            "unit": stmt.excluded.unit,
-            "source": stmt.excluded.source,
-            "dataset_code": stmt.excluded.dataset_code,
-            "updated_at": stmt.excluded.updated_at,
-        },
-    )
-
-    with engine.begin() as conn:
-        conn.execute(stmt)
-
-    print(f"  Upserted {len(records)} rows for eeiratio")
-    return len(records)
-
-
 def load_all() -> None:
     """Load all available preprocessed CSVs into the database."""
     total = 0
@@ -828,12 +673,6 @@ def load_all() -> None:
             total += count
         except Exception as e:
             print(f"  ERROR loading {dataset_code}: {e}")
-
-    print("Deriving eeiratio from eei10/eei80...")
-    try:
-        total += derive_eeiratio()
-    except Exception as e:
-        print(f"  ERROR deriving eeiratio: {e}")
 
     print(f"\nDone. Total rows upserted: {total}")
 
