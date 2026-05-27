@@ -1,0 +1,15 @@
+[Unit]
+Description=Prefect Worker
+After=network.target prefect-server.service
+
+[Service]
+User=REPLACE_WITH_SERVICE_USER
+WorkingDirectory=/opt/yhoda
+EnvironmentFile=/opt/yhoda/.env
+ExecStartPre=/bin/sleep 10
+ExecStart=/opt/yhoda/.venv/bin/prefect worker start --pool yhovi-default --type process
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Prefect Server
+After=network.target postgresql.service
+
+[Service]
+User=REPLACE_WITH_SERVICE_USER
+WorkingDirectory=/opt/yhoda
+EnvironmentFile=/opt/yhoda/.env
+ExecStart=/opt/yhoda/.venv/bin/prefect server start --host 0.0.0.0
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
