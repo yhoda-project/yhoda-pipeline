@@ -34,18 +34,20 @@ def _get_logger() -> logging.Logger | logging.LoggerAdapter[logging.Logger]:
 # ---------------------------------------------------------------------------
 # Dataset and field identifiers
 # ---------------------------------------------------------------------------
-# These IDs are from the Stat-Xplore schema (GET /schema).
-# To re-verify or discover new datasets, call browse_stat_xplore_schema().
+# IDs sourced from GET /schema → GET /schema/{database_id} → GET group href.
+# Geography fields are FIELD type children inside a GROUP; results are
+# filtered to Yorkshire LADs post-fetch. To re-verify or discover new IDs,
+# call browse_stat_xplore_schema().
 
-_CIL_DATABASE = "str:database:cil"
-_CIL_MEASURE = "str:count:cil:V_F_CIL"
-_CIL_LA_FIELD = "str:field:cil:F_CIL_LA:CGILAA"
-_CIL_DATE_FIELD = "str:field:cil:F_CIL_DATE:DATE_NAME"
+_CIL_DATABASE = "str:database:CILIF_AHC"
+_CIL_MEASURE = "str:count:CILIF_AHC:V_F_CILIF_AHC"
+_CIL_LA_FIELD = "str:field:CILIF_AHC:V_F_CILIF_AHC:UK_COA_CODE"
+_CIL_DATE_FIELD = "str:field:CILIF_AHC:F_CILIF_DATE_AHC:DATE_NAME"
 
-_PIP_DATABASE = "str:database:pip_new"
-_PIP_MEASURE = "str:count:pip_new:V_F_PIP_NEW"
-_PIP_LA_FIELD = "str:field:pip_new:F_PIP_NEW_LA:LANAME"
-_PIP_DATE_FIELD = "str:field:pip_new:F_PIP_NEW_DATE:DATE_NAME"
+_PIP_DATABASE = "str:database:PIP_Monthly_new"
+_PIP_MEASURE = "str:count:PIP_Monthly_new:V_F_PIP_MONTHLY"
+_PIP_LA_FIELD = "str:field:PIP_Monthly_new:V_F_PIP_MONTHLY:COA_CODE"
+_PIP_DATE_FIELD = "str:field:PIP_Monthly_new:F_PIP_DATE:DATE2"
 
 
 def _headers(api_key: str) -> dict[str, str]:
@@ -95,7 +97,7 @@ def _flatten_cube(response: dict[str, Any]) -> pd.DataFrame:
         and a 'value' column.
     """
     fields = response["fields"]
-    cube_values = response["cubes"][0]["values"]
+    cube_values = next(iter(response["cubes"].values()))["values"]
 
     rows = []
     counts = [len(f["items"]) for f in fields]
@@ -159,8 +161,8 @@ def _extract_dwp_table(
         "database": database,
         "measures": [measure],
         "dimensions": [
-            {"id": date_field},
-            {"id": la_field},
+            [date_field],
+            [la_field],
         ],
     }
 
