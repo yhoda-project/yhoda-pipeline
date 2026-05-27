@@ -41,14 +41,16 @@ def _get_logger() -> logging.Logger | logging.LoggerAdapter[logging.Logger]:
 
 _CIL_DATABASE = "str:database:CILIF_AHC"
 _CIL_MEASURE = "str:count:CILIF_AHC:V_F_CILIF_AHC"
-_CIL_LA_FIELD = "str:field:CILIF_AHC:V_F_CILIF_AHC:UK_COA_CODE"
-_CIL_LA_VALUESET = "V_C_MASTERGEOG21_LA_TO_REGION_NI"
+_CIL_LA_VALUESET = (
+    "str:valueset:CILIF_AHC:V_F_CILIF_AHC:UK_COA_CODE:V_C_MASTERGEOG21_LA_TO_REGION_NI"
+)
 _CIL_DATE_FIELD = "str:field:CILIF_AHC:F_CILIF_DATE_AHC:DATE_NAME"
 
 _PIP_DATABASE = "str:database:PIP_Monthly_new"
 _PIP_MEASURE = "str:count:PIP_Monthly_new:V_F_PIP_MONTHLY"
-_PIP_LA_FIELD = "str:field:PIP_Monthly_new:V_F_PIP_MONTHLY:COA_CODE"
-_PIP_LA_VALUESET = "V_C_MASTERGEOG21_LA_TO_REGION"
+_PIP_LA_VALUESET = (
+    "str:valueset:PIP_Monthly_new:V_F_PIP_MONTHLY:COA_CODE:V_C_MASTERGEOG21_LA_TO_REGION"
+)
 _PIP_DATE_FIELD = "str:field:PIP_Monthly_new:F_PIP_DATE:DATE2"
 
 
@@ -144,7 +146,6 @@ def browse_stat_xplore_schema(api_key: str) -> dict[str, Any]:
 def _extract_dwp_table(
     database: str,
     measure: str,
-    la_field: str,
     la_valueset: str,
     date_field: str,
     dataset_label: str,
@@ -152,31 +153,21 @@ def _extract_dwp_table(
 ) -> pd.DataFrame:
     """Generic Stat-Xplore extractor for a date x local-authority table.
 
-    Uses recodes to request only Yorkshire LAD items, flattens the cube
-    response, and extracts GSS codes from geography URIs.
+    Requests all LAs via the valueset dimension, flattens the cube response,
+    and filters to Yorkshire LADs client-side.
 
     Returns:
         DataFrame with columns: period_label, lad_name, lad_code, value.
     """
     logger = _get_logger()
 
-    db_id = database.split(":")[-1]
-    field_path = ":".join(la_field.split(":")[3:])
-    la_item_prefix = f"str:value:{db_id}:{field_path}:{la_valueset}"
-
     payload: dict[str, Any] = {
         "database": database,
         "measures": [measure],
         "dimensions": [
             [date_field],
-            [la_field],
+            [la_valueset],
         ],
-        "recodes": {
-            la_field: {
-                "map": [[f"{la_item_prefix}:{code}"] for code in YORKSHIRE_LAD_CODES],
-                "total": False,
-            }
-        },
     }
 
     logger.info("Fetching %s from DWP Stat-Xplore", dataset_label)
@@ -214,7 +205,6 @@ def extract_children_low_income() -> pd.DataFrame:
     return _extract_dwp_table(
         database=_CIL_DATABASE,
         measure=_CIL_MEASURE,
-        la_field=_CIL_LA_FIELD,
         la_valueset=_CIL_LA_VALUESET,
         date_field=_CIL_DATE_FIELD,
         dataset_label="Children in Low Income",
@@ -240,7 +230,6 @@ def extract_pip_claimants() -> pd.DataFrame:
     return _extract_dwp_table(
         database=_PIP_DATABASE,
         measure=_PIP_MEASURE,
-        la_field=_PIP_LA_FIELD,
         la_valueset=_PIP_LA_VALUESET,
         date_field=_PIP_DATE_FIELD,
         dataset_label="PIP claimants",
