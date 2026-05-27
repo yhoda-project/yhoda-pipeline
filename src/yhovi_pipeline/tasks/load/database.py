@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 import pandas as pd
 from prefect import task
 from prefect.logging import get_run_logger
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -140,3 +140,38 @@ def write_metadata(
         session.commit()
 
     logger.info("Wrote metadata for %s: %s", dataset_code, status.value)
+
+
+@task(
+    name="load/database/query-population",
+    description="Fetch total population by LAD and year from the indicator table.",
+)
+def query_population() -> pd.DataFrame:
+    """Query total population estimates from the indicator table.
+
+    Used by DWP normalisation to compute per-capita rates.
+
+    Returns:
+        DataFrame with columns: lad_code (str), year (int), population (float).
+    """
+    logger = get_run_logger()
+    engine = _get_engine()
+
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                "SELECT lad_code, EXTRACT(YEAR FROM reference_period)::int AS year, "
+                "value AS population "
+                "FROM indicator "
+                "WHERE indicator_id = 'total_population'"
+            )
+        ).fetchall()
+
+    df = pd.DataFrame(rows, columns=["lad_code", "year", "population"])
+
+    if df.empty:
+        logger.warning("No population data found — load SDPOP before running DWP flows")
+    else:
+        logger.info("Loaded population for %d LAD-year combinations", len(df))
+
+    return df

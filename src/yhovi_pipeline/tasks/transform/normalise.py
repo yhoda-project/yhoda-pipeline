@@ -443,3 +443,120 @@ def normalise_fingertips(
         sex_filter,
     )
     return result
+
+
+# ---------------------------------------------------------------------------
+# DWP helpers
+# ---------------------------------------------------------------------------
+
+
+def _parse_dwp_period(period_label: str) -> date:
+    """Parse a DWP Stat-Xplore period string to a ``date``.
+
+    Handles:
+    - Monthly: "July 2024"       → date(2024, 7, 1)
+    - Financial year: "2022/23"  → date(2023, 1, 1)  (end year)
+    - Plain year: "2022"         → date(2022, 1, 1)
+
+    Raises:
+        ValueError: If the string cannot be parsed.
+    """
+    period_label = period_label.strip()
+
+    # "July 2024" or "Jul 2024"
+    m = re.fullmatch(r"([A-Za-z]+)\s+(\d{4})", period_label)
+    if m:
+        for fmt in ("%d %B %Y", "%d %b %Y"):
+            try:
+                return datetime.strptime(f"01 {m.group(1)} {m.group(2)}", fmt).date()
+            except ValueError:
+                continue
+
+    # "2022/23" financial year — resolve to end year
+    m = re.fullmatch(r"(\d{4})/(\d{2})", period_label)
+    if m:
+        return date(_resolve_century(int(m.group(1)), int(m.group(2))), 1, 1)
+
+    # Plain year "2022"
+    if re.fullmatch(r"\d{4}", period_label):
+        return date(int(period_label), 1, 1)
+
+    raise ValueError(f"Cannot parse DWP period label: {period_label!r}")
+
+
+@task(
+    name="transform/normalise/dwp",
+    description="Normalise DWP Stat-Xplore count data to the canonical Indicator schema.",
+)
+def normalise_dwp(
+    df: pd.DataFrame,
+    pop_df: pd.DataFrame,
+    indicator_id: str,
+    indicator_name: str,
+    dataset_code: str,
+    rate_per: int,
+    unit: str,
+) -> pd.DataFrame:
+    """Transform DWP count data into the Indicator schema as a per-capita rate.
+
+    Joins count data with annual population estimates to compute a rate.
+    Population is matched on lad_code and year (derived from reference_period).
+
+    Args:
+        df: DataFrame from a DWP extract task with columns:
+            period_label, lad_name, lad_code, value (raw count).
+        pop_df: Population DataFrame with columns: lad_code, year, population.
+            Produced by query_population().
+        indicator_id: Machine-readable identifier stored in the DB.
+        indicator_name: Human-readable name.
+        dataset_code: Dataset code.
+        rate_per: Population denominator (e.g. 10_000 or 100_000).
+        unit: Unit label (e.g. "per 10k").
+
+    Returns:
+        DataFrame with columns matching the ``Indicator`` ORM model.
+    """
+    logger = _get_logger()
+
+    df = df.copy()
+    df["reference_period"] = df["period_label"].apply(_parse_dwp_period)
+    df["year"] = df["reference_period"].apply(lambda d: d.year)
+
+    merged = df.merge(
+        pop_df[["lad_code", "year", "population"]],
+        on=["lad_code", "year"],
+        how="left",
+    )
+
+    missing_pop = merged["population"].isna().sum()
+    if missing_pop:
+        logger.warning("%d rows dropped — no matching population estimate for year", missing_pop)
+    merged = merged.dropna(subset=["population", "value"])
+    merged = merged[merged["population"] > 0]
+
+    now = datetime.now(UTC)
+    result = pd.DataFrame(
+        {
+            "indicator_id": indicator_id,
+            "indicator_name": indicator_name,
+            "geography_code": merged["lad_code"],
+            "geography_name": merged["lad_name"],
+            "geography_level": "lad",
+            "lad_code": merged["lad_code"],
+            "lad_name": merged["lad_name"],
+            "reference_period": merged["reference_period"],
+            "value": merged["value"] / merged["population"] * rate_per,
+            "unit": unit,
+            "source": "dwp",
+            "dataset_code": dataset_code,
+            "breakdown_category": "",
+            "is_forecast": False,
+            "forecast_model": None,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+
+    result = result.dropna(subset=["value"])
+    logger.info("Normalised %d rows for %s (rate per %d)", len(result), indicator_id, rate_per)
+    return result

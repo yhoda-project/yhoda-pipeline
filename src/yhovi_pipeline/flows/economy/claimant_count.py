@@ -1,14 +1,52 @@
 """Claimant Count flow.
 
-Extracts Universal Credit / JSA claimant count data from DWP Stat-Xplore
-for all Yorkshire LADs.
+Extracts Children in Low Income and PIP claimant count data from DWP
+Stat-Xplore for all Yorkshire LADs and loads them into the data warehouse
+as per-capita rates.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Any
+
 from prefect import flow
-from prefect.logging import get_run_logger
 from prefect.task_runners import ThreadPoolTaskRunner
+
+from yhovi_pipeline.db.models import ExtractionStatus
+from yhovi_pipeline.tasks.extract.dwp import extract_children_low_income, extract_pip_claimants
+from yhovi_pipeline.tasks.load.database import query_population, upsert_indicators, write_metadata
+from yhovi_pipeline.tasks.transform.normalise import normalise_dwp
+
+
+@dataclass
+class _DatasetConfig:
+    extract_fn: Any  # Prefect Task — Any avoids callable-overload complications
+    dataset_code: str
+    indicator_id: str
+    indicator_name: str
+    rate_per: int
+    unit: str
+
+
+_DATASETS = [
+    _DatasetConfig(
+        extract_fn=extract_children_low_income,
+        dataset_code="eeicli",
+        indicator_id="children_low_income_per_10k",
+        indicator_name="Children in relative low income households per 10,000",
+        rate_per=10_000,
+        unit="per 10k",
+    ),
+    _DatasetConfig(
+        extract_fn=extract_pip_claimants,
+        dataset_code="eejpip",
+        indicator_id="disability_benefits_per_100k",
+        indicator_name="Number of people with disability benefits (PIP) per 100,000 residents",
+        rate_per=100_000,
+        unit="per 100k",
+    ),
+]
 
 
 @flow(
@@ -19,18 +57,48 @@ from prefect.task_runners import ThreadPoolTaskRunner
     task_runner=ThreadPoolTaskRunner(max_workers=4),  # type: ignore[arg-type]
 )
 def claimant_count_flow() -> None:
-    """Orchestrate the claimant count ETL pipeline.
+    """Orchestrate the DWP claimant count ETL pipeline.
 
-    Steps (to be implemented in Phase 2):
-        1. Extract claimant count data from DWP Stat-Xplore API.
-        2. Validate response.
-        3. Normalise to the canonical ``Indicator`` schema.
-        4. Upsert into the data warehouse.
-        5. Write audit metadata.
+    Extracts Children in Low Income and PIP claimant counts from DWP
+    Stat-Xplore, normalises to per-capita rates using population already
+    in the indicator table, and upserts into the data warehouse.
     """
-    logger = get_run_logger()
-    logger.info(
-        "DWP Stat-Xplore extract not yet implemented: pending DWP API key "
-        "registration at https://stat-xplore.dwp.gov.uk/. Once the key is "
-        "available, set DWP_API_KEY and implement tasks/extract/dwp.py."
-    )
+    pop_df = query_population()
+
+    failures: list[str] = []
+
+    for ds in _DATASETS:
+        try:
+            raw_df = ds.extract_fn()
+
+            indicator_df = normalise_dwp(
+                df=raw_df,
+                pop_df=pop_df,
+                indicator_id=ds.indicator_id,
+                indicator_name=ds.indicator_name,
+                dataset_code=ds.dataset_code,
+                rate_per=ds.rate_per,
+                unit=ds.unit,
+            )
+
+            rows_loaded = upsert_indicators(df=indicator_df, dataset_code=ds.dataset_code)
+
+            write_metadata(
+                dataset_code=ds.dataset_code,
+                source="dwp",
+                status=ExtractionStatus.SUCCESS,
+                rows_extracted=len(raw_df),
+                rows_loaded=rows_loaded,
+            )
+
+        except Exception as e:
+            write_metadata(
+                dataset_code=ds.dataset_code,
+                source="dwp",
+                status=ExtractionStatus.FAILED,
+                error_message=str(e)[:500],
+            )
+            failures.append(f"{ds.dataset_code}: {e}")
+
+    if failures:
+        raise RuntimeError(f"DWP claimant count failed for: {'; '.join(failures)}")
