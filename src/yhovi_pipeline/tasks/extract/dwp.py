@@ -143,6 +143,30 @@ def browse_stat_xplore_schema(api_key: str) -> dict[str, Any]:
     return resp.json()  # type: ignore[no-any-return]
 
 
+def _fetch_date_items(date_field: str, api_key: str) -> list[str]:
+    """Return all value item IDs for a Stat-Xplore date field.
+
+    Drills through a single VALUESET child if present, otherwise returns
+    VALUE children directly.
+    """
+    resp = requests.get(
+        f"{_BASE}/schema/{date_field}",
+        headers=_headers(api_key),
+        timeout=30,
+    )
+    resp.raise_for_status()
+    children = resp.json().get("children", [])
+    if children and children[0].get("type") == "VALUESET":
+        vs_resp = requests.get(
+            f"{_BASE}/schema/{children[0]['id']}",
+            headers=_headers(api_key),
+            timeout=30,
+        )
+        vs_resp.raise_for_status()
+        children = vs_resp.json().get("children", [])
+    return [c["id"] for c in children]
+
+
 def _extract_dwp_table(
     database: str,
     measure: str,
@@ -150,30 +174,42 @@ def _extract_dwp_table(
     date_field: str,
     dataset_label: str,
     api_key: str,
+    recent_periods: int = 12,
 ) -> pd.DataFrame:
     """Generic Stat-Xplore extractor for a date x local-authority table.
 
-    Requests all LAs via the valueset dimension, flattens the cube response,
-    and filters to Yorkshire LADs client-side.
+    Fetches the most recent ``recent_periods`` date items, then filters
+    to Yorkshire LADs client-side. Historical data is assumed to be
+    pre-loaded; this keeps each pipeline run to a single API call.
 
     Returns:
         DataFrame with columns: period_label, lad_name, lad_code, value.
     """
     logger = _get_logger()
 
+    date_items = _fetch_date_items(date_field, api_key)
+    recent = date_items[-recent_periods:]
+    logger.info(
+        "Fetching %s: %d most recent of %d available periods",
+        dataset_label,
+        len(recent),
+        len(date_items),
+    )
+
     payload: dict[str, Any] = {
         "database": database,
         "measures": [measure],
-        "dimensions": [
-            [date_field],
-            [la_valueset],
-        ],
+        "dimensions": [[date_field], [la_valueset]],
+        "recodes": {
+            date_field: {
+                "map": [[item] for item in recent],
+                "total": False,
+            }
+        },
     }
 
-    logger.info("Fetching %s from DWP Stat-Xplore", dataset_label)
     response = _post_table(payload, api_key)
     df = _flatten_cube(response)
-    logger.info("Received %d rows before filtering", len(df))
 
     date_label = response["fields"][0]["label"]
     la_label = response["fields"][1]["label"]

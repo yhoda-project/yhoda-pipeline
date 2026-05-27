@@ -472,6 +472,11 @@ def _parse_dwp_period(period_label: str) -> date:
             except ValueError:
                 continue
 
+    # "Jan-26" — PIP monthly format (abbreviated month, 2-digit year)
+    m = re.fullmatch(r"([A-Za-z]{3})-(\d{2})", period_label)
+    if m:
+        return datetime.strptime(f"01 {m.group(1)} 20{m.group(2)}", "%d %b %Y").date()
+
     # "2022/23" financial year — resolve to end year
     m = re.fullmatch(r"(\d{4})/(\d{2})", period_label)
     if m:
