@@ -62,8 +62,8 @@ Connection tab
 |-------|-------|
 | Host name/address | `127.0.0.1` |
 | Port | `5433` |
-| Maintenance database | `postgres` |
-| Username | `yhoda` |
+| Maintenance database | `yhoda_dev` |
+| Username | e.g.`sa_test_username` |
 | Password | (your database password) |
 
 SSH Tunnel tab - leave completely empty / tunnelling toggled OFF.
@@ -76,12 +76,13 @@ connected icon.
 
 ---
 
-## Step 4 — Browse the tables
+## Step 4 — Browse the tables in yhoda_dev
 
-In the left panel, expand:
+Once connected, you'll see 2 databases; the default postgres database and the yhoda_dev database. yhoda_dev is our
+database. In the left panel, expand:
 
 ```
-YHODA Staging → Databases → yhoda → Schemas → public → Tables
+YHODA Staging → Databases → yhoda_dev → Schemas → public → Tables
 ```
 
 Currently, you will see 6 tables:
