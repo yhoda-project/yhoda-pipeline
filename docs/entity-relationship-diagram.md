@@ -17,8 +17,10 @@ erDiagram
     varchar indicator_id
     varchar indicator_name
     varchar geography_code
+    varchar geography_name
     varchar geography_level
     varchar lad_code
+    varchar lad_name
     date reference_period
     float value
     varchar unit
