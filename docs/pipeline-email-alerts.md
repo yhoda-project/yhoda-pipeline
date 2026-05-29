@@ -64,7 +64,8 @@ WARNING - the pipeline ran but something was unusual (e.g. fewer rows
 than expected). Worth noting but no immediate action required.
 
 SUCCESS - confirmation that a flow ran and updated the database
-successfully. These can be turned off if they become noisy.
+successfully. These are off by default. Set `ALERT_SUCCESS_ENABLED=true` in `.env` to
+enable them, or remove that line to turn them off again.
 
 ---
 
@@ -73,16 +74,23 @@ successfully. These can be turned off if they become noisy.
 The alert system requires three environment variables set on the server.
 These are added to the `.env` file on the VM by the RSEs.
 
-| Variable          | Description                                      |
-|-------------------|--------------------------------------------------|
-| `SMTP_USERNAME`   | Sheffield university email used to send alerts   |
-| `SMTP_PASSWORD`   | Google App Password (not your normal password)   |
-| `ALERT_GROUP_EMAIL` | Email address(es) that receive the alerts      |
+| Variable               | Description                                           |
+|------------------------|-------------------------------------------------------|
+| `SMTP_USERNAME`        | Sheffield university email used to send alerts        |
+| `SMTP_PASSWORD`        | Google App Password (not your normal password)        |
+| `ALERT_GROUP_EMAIL`    | Email address(es) that receive the alerts             |
+| `ALERT_SUCCESS_ENABLED` | Set to `true` to receive emails on successful runs  |
 
 `ALERT_GROUP_EMAIL` can be a single address or a comma-separated list:
 
 ```
 ALERT_GROUP_EMAIL=your.email@sheffield.ac.uk
+```
+
+Success emails are off by default. To enable them:
+
+```
+ALERT_SUCCESS_ENABLED=true
 ```
 
 ---
