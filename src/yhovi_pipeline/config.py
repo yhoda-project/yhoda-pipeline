@@ -90,6 +90,19 @@ class Settings(BaseSettings):
     prefect_work_pool: str = "yhovi-default"
     """Name of the Prefect work pool used by all deployments."""
 
+    # Alerts -----------------------------------------------------------------
+    smtp_username: SecretStr | None = None
+    """University of Sheffield email address used to send pipeline alerts."""
+
+    smtp_password: SecretStr | None = None
+    """Google App Password for the alert sender account."""
+
+    alert_group_email: str | None = None
+    """Recipient address for pipeline alerts — single address or comma-separated list."""
+
+    alert_success_enabled: bool = False
+    """Set to true to receive an email on every successful flow run."""
+
     # Logging ----------------------------------------------------------------
     log_level: str = "INFO"
     """Python logging level string (DEBUG, INFO, WARNING, ERROR)."""

@@ -14,6 +14,7 @@ from yhovi_pipeline.tasks.extract.nomis import extract_ashe
 from yhovi_pipeline.tasks.load.database import upsert_indicators, write_metadata
 from yhovi_pipeline.tasks.transform.normalise import normalise_nomis_ashe
 from yhovi_pipeline.tasks.transform.validate import validate_schema
+from yhovi_pipeline.utils.notify import send_failure_alert
 
 DATASET_CODE = "eejpay"
 
@@ -69,4 +70,5 @@ def earnings_flow(time: str = "latest") -> None:
             status=ExtractionStatus.FAILED,
             error_message=str(e)[:500],
         )
+        send_failure_alert("economy-earnings", str(e)[:500])
         raise

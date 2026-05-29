@@ -17,6 +17,7 @@ from yhovi_pipeline.db.models import ExtractionStatus
 from yhovi_pipeline.tasks.extract.dwp import extract_children_low_income, extract_pip_claimants
 from yhovi_pipeline.tasks.load.database import query_population, upsert_indicators, write_metadata
 from yhovi_pipeline.tasks.transform.normalise import normalise_dwp
+from yhovi_pipeline.utils.notify import send_failure_alert
 
 
 @dataclass
@@ -101,4 +102,6 @@ def claimant_count_flow() -> None:
             failures.append(f"{ds.dataset_code}: {e}")
 
     if failures:
-        raise RuntimeError(f"DWP claimant count failed for: {'; '.join(failures)}")
+        error = f"DWP claimant count failed for: {'; '.join(failures)}"
+        send_failure_alert("economy-claimant-count", error)
+        raise RuntimeError(error)

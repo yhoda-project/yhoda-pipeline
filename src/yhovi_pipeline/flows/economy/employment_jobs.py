@@ -14,6 +14,7 @@ from yhovi_pipeline.tasks.extract.nomis import extract_aps, extract_jobs_density
 from yhovi_pipeline.tasks.load.database import upsert_indicators, write_metadata
 from yhovi_pipeline.tasks.transform.normalise import normalise_nomis_annual, normalise_nomis_aps
 from yhovi_pipeline.tasks.transform.validate import validate_schema
+from yhovi_pipeline.utils.notify import send_failure_alert
 
 # Map APS variable keys to dataset metadata for the indicator table.
 APS_DATASETS: dict[str, dict[str, str]] = {
@@ -119,6 +120,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
                 status=ExtractionStatus.FAILED,
                 error_message=str(e)[:500],
             )
+            send_failure_alert("economy-employment-jobs", str(e)[:500])
             raise
 
     # Jobs Density (eejjd — ONS NM_57_1, pre-calculated ratio)
@@ -157,4 +159,5 @@ def employment_jobs_flow(time: str = "latest") -> None:
             status=ExtractionStatus.FAILED,
             error_message=str(e)[:500],
         )
+        send_failure_alert("economy-employment-jobs", str(e)[:500])
         raise

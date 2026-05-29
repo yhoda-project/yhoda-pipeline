@@ -40,6 +40,7 @@ from yhovi_pipeline.tasks.extract.fingertips import (
 from yhovi_pipeline.tasks.load.database import upsert_indicators, write_metadata
 from yhovi_pipeline.tasks.transform.normalise import normalise_fingertips
 from yhovi_pipeline.tasks.transform.validate import validate_schema
+from yhovi_pipeline.utils.notify import send_failure_alert
 
 # ---------------------------------------------------------------------------
 # Dataset registry
@@ -147,4 +148,5 @@ def health_outcomes_flow() -> None:
                 status=ExtractionStatus.FAILED,
                 error_message=str(e)[:500],
             )
+            send_failure_alert("society-health-outcomes", str(e)[:500])
             raise

@@ -14,6 +14,7 @@ from yhovi_pipeline.tasks.extract.nomis import extract_aps
 from yhovi_pipeline.tasks.load.database import upsert_indicators, write_metadata
 from yhovi_pipeline.tasks.transform.normalise import normalise_nomis_aps
 from yhovi_pipeline.tasks.transform.validate import validate_schema
+from yhovi_pipeline.utils.notify import send_failure_alert
 
 # APS qualification variables mapped to indicator metadata.
 QUALIFICATION_DATASETS: dict[str, dict[str, str]] = {
@@ -97,4 +98,5 @@ def education_attainment_flow(time: str = "latestMinus1,latest") -> None:
                 status=ExtractionStatus.FAILED,
                 error_message=str(e)[:500],
             )
+            send_failure_alert("society-education-attainment", str(e)[:500])
             raise
