@@ -1,1 +1,1 @@
-"""Load tasks: write transformed data to the SQL Server data warehouse."""
+"""Load tasks: write transformed data to the PostgreSQL data warehouse."""

@@ -29,8 +29,8 @@ def test_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     get_settings.cache_clear()
 
     monkeypatch.setenv(
-        "SQL_SERVER_CONNECTION_STRING",
-        "mssql+pyodbc://test:test@localhost/test_db?driver=ODBC+Driver+18+for+SQL+Server",
+        "DATABASE_URL",
+        "postgresql+psycopg2://test:test@localhost/test_db",
     )
     monkeypatch.setenv("DWP_API_KEY", "test-dwp-key")
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")

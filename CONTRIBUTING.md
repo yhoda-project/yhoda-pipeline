@@ -77,7 +77,7 @@ For the unit tests to run without a real database, the following env vars
 must be set (dummy values are fine):
 
 ```bash
-export SQL_SERVER_CONNECTION_STRING="mssql+pyodbc://t:t@h/d"
+export DATABASE_URL="postgresql+psycopg2://t:t@localhost/d"
 export DWP_API_KEY="x"
 uv run pytest tests/unit/
 ```

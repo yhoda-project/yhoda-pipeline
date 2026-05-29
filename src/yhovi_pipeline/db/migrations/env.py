@@ -40,13 +40,12 @@ def _get_url() -> str:
     """Return the database URL, reading directly from the environment.
 
     We intentionally bypass ``Settings`` here so that migrations can run
-    with only ``SQL_SERVER_CONNECTION_STRING`` set — no API keys needed.
+    with only ``DATABASE_URL`` set — no API keys needed.
     """
-    url = os.environ.get("SQL_SERVER_CONNECTION_STRING")
+    url = os.environ.get("DATABASE_URL")
     if not url:
         raise RuntimeError(
-            "SQL_SERVER_CONNECTION_STRING environment variable is not set. "
-            "Export it before running Alembic."
+            "DATABASE_URL environment variable is not set. Export it before running Alembic."
         )
     return url
 
@@ -68,7 +67,6 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        # SQL Server: include schema in comparison
         include_schemas=True,
         # Render constraint names using the naming convention
         render_as_batch=False,

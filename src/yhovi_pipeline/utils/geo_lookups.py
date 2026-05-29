@@ -9,6 +9,9 @@ from __future__ import annotations
 import functools
 
 import pandas as pd
+from sqlalchemy import create_engine, text
+
+from yhovi_pipeline.config import get_settings
 
 
 @functools.lru_cache(maxsize=1)
@@ -22,8 +25,18 @@ def get_geo_lookup() -> pd.DataFrame:
         DataFrame with columns: ``lsoa_code``, ``lsoa_name``, ``msoa_code``,
         ``msoa_name``, ``lad_code``, ``lad_name``, ``region_code``, ``region_name``.
     """
-    # TODO: implement — query GeoLookup table via SQLAlchemy session
-    raise NotImplementedError("get_geo_lookup not yet implemented")
+    settings = get_settings()
+    engine = create_engine(settings.database_url.get_secret_value())
+
+    with engine.connect() as conn:
+        df = pd.read_sql(
+            text(
+                "SELECT lsoa_code, lsoa_name, msoa_code, msoa_name, lad_code, lad_name, region_code, region_name FROM geo_lookup"
+            ),
+            conn,
+        )
+
+    return df
 
 
 def lsoa_to_lad(lsoa_code: str) -> str | None:
@@ -35,5 +48,6 @@ def lsoa_to_lad(lsoa_code: str) -> str | None:
     Returns:
         The corresponding LAD GSS code, or ``None`` if not found.
     """
-    # TODO: implement
-    raise NotImplementedError("lsoa_to_lad not yet implemented")
+    lookup = get_geo_lookup()
+    match = lookup.loc[lookup["lsoa_code"] == lsoa_code, "lad_code"]
+    return match.iloc[0] if not match.empty else None

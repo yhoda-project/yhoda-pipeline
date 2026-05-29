@@ -21,7 +21,7 @@ def test_settings_instantiation(test_settings: Settings) -> None:
     """Settings should instantiate correctly from the test fixture."""
     assert test_settings.log_level == "DEBUG"
     assert test_settings.prefect_work_pool == "yhovi-default"
-    assert test_settings.sql_server_connection_string is not None
+    assert test_settings.database_url is not None
     assert test_settings.dwp_api_key is not None
 
 

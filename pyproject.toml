@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "yhovi-pipeline"
 version = "0.1.0"
-description = "Yorkshire Vitality Observatory — Prefect v3 ETL pipeline"
+description = "Yorkshire Vitality Observatory Prefect v3 ETL pipeline"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -14,11 +14,13 @@ dependencies = [
     "sqlalchemy>=2.0,<3.0",
     "alembic>=1.13,<2.0",
     "pydantic-settings>=2.0,<3.0",
-    "pyodbc>=5.0",
+    "psycopg2-binary>=2.9",
     "requests>=2.31",
     "httpx>=0.27",
     "tenacity>=8.2",
     "pandas>=2.2",
+    "openpyxl>=3.1.5",
+    "ipython>=9.10.0",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +31,7 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "sqlalchemy[mypy]>=2.0",
+    "types-requests>=2.31",
 ]
 
 [tool.setuptools.packages.find]
@@ -69,3 +72,14 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v --tb=short"
+filterwarnings = [
+    # Prefect emits this when tasks are called directly outside a flow context in
+    # unit tests.  The warning is expected and benign — suppressed here for clarity.
+    "ignore:Logger 'prefect\\.task_runs' attempted to send logs:UserWarning",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pre-commit>=4.5.1",
+]

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-YHODA (Yorkshire & Humber Office for Data Analytics) is a **Prefect v3 ETL pipeline** that collects, transforms, and warehouses socioeconomic, health, and environmental indicators for all 22 Yorkshire Local Authority Districts (LADs) into a SQL Server data warehouse. The pipeline supports the [Yorkshire Engagement Portal](https://yorkshireportal.org/) and its [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
+YHODA (Yorkshire & Humber Office for Data Analytics) is a **Prefect v3 ETL pipeline** that collects, transforms, and warehouses socioeconomic, health, and environmental indicators for all 22 Yorkshire Local Authority Districts (LADs) into a PostgreSQL data warehouse. The pipeline supports the [Yorkshire Engagement Portal](https://yorkshireportal.org/) and its [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
 
 **Current Status:** Phase 1 complete (scaffolding). Phase 2 (implementation) is pending — all flow and task bodies contain `# TODO: implement` stubs.
 
@@ -81,7 +81,7 @@ uv run pytest --cov=src/yhovi_pipeline               # With coverage
 Unit tests require env vars (no real DB needed):
 
 ```bash
-export SQL_SERVER_CONNECTION_STRING="mssql+pyodbc://t:t@h/d"
+export DATABASE_URL="postgresql+psycopg2://t:t@localhost/d"
 export DWP_API_KEY="x"
 uv run pytest tests/unit/
 ```
@@ -105,7 +105,7 @@ uv run prefect deploy --all --no-prompt
 ### Data Flow
 
 ```
-8 Source APIs → extract/ tasks → transform/ tasks (validate → normalise → geo) → load/ tasks → SQL Server
+8 Source APIs → extract/ tasks → transform/ tasks (validate → normalise → geo) → load/ tasks → PostgreSQL
 ```
 
 Each source maps to a dedicated extract task in `src/yhovi_pipeline/tasks/extract/`. Flows in `src/yhovi_pipeline/flows/` orchestrate these tasks and are grouped into three domains: `economy/` (4 flows), `society/` (7 flows), `environment/` (2 flows).
@@ -115,7 +115,7 @@ Each source maps to a dedicated extract task in `src/yhovi_pipeline/tasks/extrac
 - **`config.py`** — Pydantic Settings singleton. Always use `get_settings()` to access config; never read `os.environ` directly (exception: `db/migrations/env.py`). Secrets are `SecretStr` — call `.get_secret_value()` only at the call site.
 - **`db/models.py`** — SQLAlchemy 2.0 ORM with three tables: `Indicator` (fact), `DatasetMetadata` (audit/run history), `GeoLookup` (LSOA→MSOA→LAD→Region dimension).
 - **`tasks/transform/`** — `validate.py` (schema & LAD validation), `normalise.py` (canonical Indicator shape), `geo.py` (geography aggregation).
-- **`tasks/load/sql_server.py`** — Upserts indicators and writes run metadata.
+- **`tasks/load/database.py`** — Upserts indicators and writes run metadata.
 - **`utils/geo_lookups.py`** — LRU-cached ONS geography lookup; `lsoa_to_lad()` for aggregation.
 
 ### Flow/Task Conventions
@@ -126,7 +126,7 @@ Each source maps to a dedicated extract task in `src/yhovi_pipeline/tasks/extrac
 
 ### Database
 
-SQL Server via pyodbc. Upsert key on `Indicator` is `(indicator_id, lad_code, reference_period)`. All 22 Yorkshire LAD codes are defined as `YORKSHIRE_LAD_CODES` in `config.py` and used throughout for filtering/validation. `ExtractionStatus` enum uses `native_enum=False` (SQL Server doesn't support native ENUMs).
+PostgreSQL via psycopg2. Upsert key on `Indicator` is `(indicator_id, lad_code, reference_period)`. All 22 Yorkshire LAD codes are defined as `YORKSHIRE_LAD_CODES` in `config.py` and used throughout for filtering/validation. `ExtractionStatus` enum uses `native_enum=False` to keep the schema portable across database backends.
 
 ### CI/CD
 
@@ -134,4 +134,4 @@ GitHub Actions (`.github/workflows/ci.yml`): lint → test → deploy (deploy on
 
 ## Environment Variables
 
-See `.env.example`. Required: `SQL_SERVER_CONNECTION_STRING`, `DWP_API_KEY`. Optional: `NOMIS_API_KEY`, `PREFECT_API_URL`, `PREFECT_WORK_POOL`, `LOG_LEVEL`.
+See `.env.example`. Required: `DATABASE_URL`, `DWP_API_KEY`. Optional: `NOMIS_API_KEY`, `PREFECT_API_URL`, `PREFECT_WORK_POOL`, `LOG_LEVEL`.

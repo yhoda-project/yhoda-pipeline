@@ -6,12 +6,17 @@ Demography publication for all Yorkshire LADs.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from prefect import flow
+from prefect.artifacts import create_markdown_artifact
+from prefect.logging import get_run_logger
 from prefect.task_runners import ThreadPoolTaskRunner
 
 
 @flow(
-    name="economy/business-demography",
+    name="economy-business-demography",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Business Demography",
     description="Extract ONS business demography data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -27,5 +32,14 @@ def business_demography_flow() -> None:
         4. Upsert into the data warehouse.
         5. Write audit metadata.
     """
-    # TODO: implement — call extract, transform, and load tasks
-    raise NotImplementedError("business_demography_flow not yet implemented")
+    logger = get_run_logger()
+    logger.info(
+        "No automated extract available: ONS Business Demography is a static "
+        "annual release. Reload data manually via load_csv.py when a new "
+        "edition is published."
+    )
+    create_markdown_artifact(
+        key="run-summary",
+        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        description="Run summary",
+    )

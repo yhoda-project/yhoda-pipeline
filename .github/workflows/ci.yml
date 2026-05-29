@@ -45,7 +45,7 @@ jobs:
     env:
       # Dummy values so pydantic-settings can instantiate Settings.
       # Real credentials are NOT needed for unit tests.
-      SQL_SERVER_CONNECTION_STRING: "mssql+pyodbc://test:test@localhost/test_db?driver=ODBC+Driver+18+for+SQL+Server"
+      DATABASE_URL: "postgresql+psycopg2://test:test@localhost/test_db"
       DWP_API_KEY: "test-key"
 
     steps:
@@ -80,8 +80,9 @@ jobs:
 
     env:
       PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
-      SQL_SERVER_CONNECTION_STRING: ${{ secrets.SQL_SERVER_CONNECTION_STRING }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DWP_API_KEY: ${{ secrets.DWP_API_KEY }}
+      NOMIS_API_KEY: ${{ secrets.NOMIS_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4

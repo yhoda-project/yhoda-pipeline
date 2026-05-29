@@ -6,8 +6,22 @@ before passing them to the normalise step.
 
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
 from prefect import task
+from prefect.logging import get_run_logger
+
+from yhovi_pipeline.config import YORKSHIRE_LAD_CODES
+
+_logger = logging.getLogger(__name__)
+
+
+def _get_logger() -> logging.Logger | logging.LoggerAdapter[logging.Logger]:
+    try:
+        return get_run_logger()
+    except Exception:
+        return _logger
 
 
 @task(
@@ -32,8 +46,19 @@ def validate_schema(
     Raises:
         ValueError: If required columns are missing or the DataFrame is empty.
     """
-    # TODO: implement
-    raise NotImplementedError("validate_schema not yet implemented")
+    logger = _get_logger()
+
+    if df.empty:
+        raise ValueError(f"Empty DataFrame received from {source}")
+
+    missing = set(required_columns) - set(df.columns)
+    if missing:
+        raise ValueError(
+            f"Missing columns from {source}: {sorted(missing)}. Got: {list(df.columns)}"
+        )
+
+    logger.info("Schema OK for %s: %d rows, columns %s", source, len(df), list(df.columns))
+    return df
 
 
 @task(
@@ -50,5 +75,15 @@ def validate_yorkshire_lads(df: pd.DataFrame, lad_col: str = "lad_code") -> pd.D
     Returns:
         The input DataFrame unchanged.
     """
-    # TODO: implement — compare df[lad_col].unique() against YORKSHIRE_LAD_CODES
-    raise NotImplementedError("validate_yorkshire_lads not yet implemented")
+    logger = _get_logger()
+
+    present = set(df[lad_col].unique())
+    expected = set(YORKSHIRE_LAD_CODES)
+    missing = expected - present
+
+    if missing:
+        logger.warning("Missing %d Yorkshire LAD codes: %s", len(missing), sorted(missing))
+    else:
+        logger.info("All %d Yorkshire LAD codes present", len(expected))
+
+    return df
