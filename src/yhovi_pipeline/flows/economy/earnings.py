@@ -6,7 +6,11 @@ for all Yorkshire LADs and loads them into the data warehouse.
 
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Any
+
 from prefect import flow
+from prefect.artifacts import create_table_artifact
 from prefect.task_runners import ThreadPoolTaskRunner
 
 from yhovi_pipeline.db.models import ExtractionStatus
@@ -23,6 +27,7 @@ ASHE_COLUMNS = ["DATE_NAME", "GEOGRAPHY_NAME", "GEOGRAPHY_CODE", "OBS_VALUE"]
 
 @flow(
     name="economy-earnings",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Earnings",
     description="Extract median gross weekly earnings from NOMIS ASHE for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -39,6 +44,7 @@ def earnings_flow(time: str = "latest") -> None:
         time: Nomis time parameter — "latest" for most recent year, or a
             range like "2010,2011,...,2024" for historical data.
     """
+    results: list[dict[str, Any]] = []
     try:
         raw_df = extract_ashe(time=time)
 
@@ -63,6 +69,15 @@ def earnings_flow(time: str = "latest") -> None:
             rows_loaded=rows_loaded,
         )
 
+        results.append(
+            {
+                "Dataset": DATASET_CODE,
+                "Rows extracted": len(raw_df),  # type: ignore[arg-type]
+                "Rows loaded": rows_loaded,
+                "Status": "OK",
+            }
+        )
+
     except Exception as e:
         write_metadata(
             dataset_code=DATASET_CODE,
@@ -71,4 +86,10 @@ def earnings_flow(time: str = "latest") -> None:
             error_message=str(e)[:500],
         )
         send_failure_alert("economy-earnings", str(e)[:500])
+        results.append(
+            {"Dataset": DATASET_CODE, "Rows extracted": "—", "Rows loaded": "—", "Status": "Failed"}
+        )
         raise
+    finally:
+        if results:
+            create_table_artifact(key="load-summary", table=results, description="Load summary")

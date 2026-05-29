@@ -7,13 +7,17 @@ aggregated to LAD level.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from prefect import flow
+from prefect.artifacts import create_markdown_artifact
 from prefect.logging import get_run_logger
 from prefect.task_runners import ThreadPoolTaskRunner
 
 
 @flow(
     name="environment-air-quality",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Environment: Air Quality",
     description="Extract DEFRA AURN air quality data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -36,4 +40,9 @@ def air_quality_flow() -> None:
         "No automated extract available: DEFRA AURN air quality data is a "
         "static annual release. Reload data manually via load_csv.py when a "
         "new edition is published."
+    )
+    create_markdown_artifact(
+        key="run-summary",
+        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        description="Run summary",
     )

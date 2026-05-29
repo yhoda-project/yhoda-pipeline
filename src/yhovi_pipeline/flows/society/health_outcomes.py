@@ -27,9 +27,11 @@ Datasets loaded:
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from prefect import flow
+from prefect.artifacts import create_table_artifact
 from prefect.task_runners import ThreadPoolTaskRunner
 
 from yhovi_pipeline.db.models import ExtractionStatus
@@ -93,6 +95,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
 
 @flow(
     name="society-health-outcomes",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Society: Health Outcomes",
     description="Extract NHS Fingertips health outcome indicators for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -109,44 +112,66 @@ def health_outcomes_flow() -> None:
     4. Upserts rows into the PostgreSQL data warehouse.
     5. Writes audit metadata.
     """
-    for dataset_code, meta in HEALTH_DATASETS.items():
-        try:
-            raw_df = extract_fingertips_indicators(
-                indicator_id=meta["fingertips_id"],
-            )
+    results: list[dict[str, Any]] = []
+    try:
+        for dataset_code, meta in HEALTH_DATASETS.items():
+            try:
+                raw_df = extract_fingertips_indicators(
+                    indicator_id=meta["fingertips_id"],
+                )
 
-            validated_df = validate_schema(
-                df=raw_df,
-                required_columns=FINGERTIPS_REQUIRED_COLUMNS,
-                source="fingertips",
-            )
+                validated_df = validate_schema(
+                    df=raw_df,
+                    required_columns=FINGERTIPS_REQUIRED_COLUMNS,
+                    source="fingertips",
+                )
 
-            indicator_df = normalise_fingertips(
-                df=validated_df,
-                dataset_code=dataset_code,
-                indicator_id=meta["indicator_id"],
-                indicator_name=meta["indicator_name"],
-                sex_filter=meta["sex_filter"],
-                age_filter=meta["age_filter"],
-                unit=meta["unit"],
-            )
+                indicator_df = normalise_fingertips(
+                    df=validated_df,
+                    dataset_code=dataset_code,
+                    indicator_id=meta["indicator_id"],
+                    indicator_name=meta["indicator_name"],
+                    sex_filter=meta["sex_filter"],
+                    age_filter=meta["age_filter"],
+                    unit=meta["unit"],
+                )
 
-            rows_loaded = upsert_indicators(df=indicator_df, dataset_code=dataset_code)
+                rows_loaded = upsert_indicators(df=indicator_df, dataset_code=dataset_code)
 
-            write_metadata(
-                dataset_code=dataset_code,
-                source="fingertips",
-                status=ExtractionStatus.SUCCESS,
-                rows_extracted=len(raw_df),  # type: ignore[arg-type]
-                rows_loaded=rows_loaded,
-            )
+                write_metadata(
+                    dataset_code=dataset_code,
+                    source="fingertips",
+                    status=ExtractionStatus.SUCCESS,
+                    rows_extracted=len(raw_df),  # type: ignore[arg-type]
+                    rows_loaded=rows_loaded,
+                )
 
-        except Exception as e:
-            write_metadata(
-                dataset_code=dataset_code,
-                source="fingertips",
-                status=ExtractionStatus.FAILED,
-                error_message=str(e)[:500],
-            )
-            send_failure_alert("society-health-outcomes", str(e)[:500])
-            raise
+                results.append(
+                    {
+                        "Dataset": dataset_code,
+                        "Rows extracted": len(raw_df),  # type: ignore[arg-type]
+                        "Rows loaded": rows_loaded,
+                        "Status": "OK",
+                    }
+                )
+
+            except Exception as e:
+                write_metadata(
+                    dataset_code=dataset_code,
+                    source="fingertips",
+                    status=ExtractionStatus.FAILED,
+                    error_message=str(e)[:500],
+                )
+                send_failure_alert("society-health-outcomes", str(e)[:500])
+                results.append(
+                    {
+                        "Dataset": dataset_code,
+                        "Rows extracted": "—",
+                        "Rows loaded": "—",
+                        "Status": "Failed",
+                    }
+                )
+                raise
+    finally:
+        if results:
+            create_table_artifact(key="load-summary", table=results, description="Load summary")

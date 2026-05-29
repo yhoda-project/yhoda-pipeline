@@ -6,7 +6,10 @@ or for triggering from an external event.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from prefect import flow
+from prefect.artifacts import create_markdown_artifact
 from prefect.logging import get_run_logger
 from prefect.task_runners import ThreadPoolTaskRunner
 
@@ -28,6 +31,7 @@ from yhovi_pipeline.flows.society.physical_activity import physical_activity_flo
 
 @flow(
     name="orchestrator-full-refresh",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Full Refresh",
     description="Run all YHODA domain flows in sequence.",
     retries=0,
     task_runner=ThreadPoolTaskRunner(max_workers=1),  # type: ignore[arg-type]
@@ -67,3 +71,17 @@ def full_refresh_flow() -> None:
     energy_consumption_flow()
 
     logger.info("=== Full refresh complete ===")
+
+    create_markdown_artifact(
+        key="run-summary",
+        markdown=(
+            "## Full Refresh Complete\n\n"
+            "All 14 domain flows were triggered in sequence.\n\n"
+            "**Economy:** Employment & Jobs, Earnings, Claimant Count, Business Demography, GDP / GVA\n\n"
+            "**Society:** Health Outcomes, Education Attainment, Housing Tenure, Deprivation (IMD), "
+            "Crime Statistics, Physical Activity, Digital Inclusion\n\n"
+            "**Environment:** Air Quality, Energy Consumption\n\n"
+            "Check each sub-flow's Artifacts tab for individual load summaries."
+        ),
+        description="Full refresh summary",
+    )

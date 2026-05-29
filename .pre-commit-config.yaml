@@ -15,25 +15,24 @@ repos:
         args: [--maxkb=500]     # guard against accidentally staging a CSV
 
   # ---------------------------------------------------------------------------
-  # Ruff — lint + format (mirrors CI: ruff check / ruff format --check)
+  # Ruff — lint + format
   # ---------------------------------------------------------------------------
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.6
+  - repo: local
     hooks:
-      - id: ruff
-        args: [--fix]
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix --unsafe-fixes src/ tests/
+        language: system
+        pass_filenames: false
+
       - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format src/ tests/
+        language: system
+        pass_filenames: false
 
   # ---------------------------------------------------------------------------
   # Mypy — type check (mirrors CI: mypy src/)
-  # Uses pre-commit's managed environment so uv does not need to be on PATH.
-  # additional_dependencies supplies the packages mypy must resolve:
-  #   - sqlalchemy[mypy] for the mypy plugin declared in pyproject.toml
-  #   - types-requests for the requests stubs used in extract tasks
-  #   - pydantic-settings for inline types used in config.py
-  # Everything else (prefect, pandas, …) is covered by ignore_missing_imports=true
-  # in pyproject.toml.
-  # pass_filenames: false so mypy checks all of src/ together (cross-file types).
   # ---------------------------------------------------------------------------
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.15.0

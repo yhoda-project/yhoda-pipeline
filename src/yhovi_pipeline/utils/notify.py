@@ -9,7 +9,7 @@ import ssl
 import time
 from datetime import UTC, datetime
 from email.mime.text import MIMEText
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from yhovi_pipeline.config import get_settings
@@ -25,7 +25,7 @@ _rate_window_start: float = 0.0
 _rate_count: int = 0
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     INFO = "INFO"
     WARNING = "WARNING"
     ERROR = "ERROR"

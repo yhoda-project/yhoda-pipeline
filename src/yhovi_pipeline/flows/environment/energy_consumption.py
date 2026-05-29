@@ -6,13 +6,19 @@ for all Yorkshire LADs.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from prefect import flow
+from prefect.artifacts import create_markdown_artifact
 from prefect.logging import get_run_logger
 from prefect.task_runners import ThreadPoolTaskRunner
 
 
 @flow(
     name="environment-energy-consumption",
+    flow_run_name=lambda **_: (
+        datetime.now().strftime("%B %Y") + " — Environment: Energy Consumption"
+    ),
     description="Extract BEIS sub-national energy consumption data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -33,4 +39,9 @@ def energy_consumption_flow() -> None:
         "No automated extract available: BEIS sub-national energy consumption "
         "data is a static annual release. Reload data manually via load_csv.py "
         "when a new edition is published."
+    )
+    create_markdown_artifact(
+        key="run-summary",
+        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        description="Run summary",
     )

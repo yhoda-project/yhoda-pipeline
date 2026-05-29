@@ -23,49 +23,64 @@ deployments:
   # -- Economy flows ----------------------------------------------------------
   - name: economy-employment-jobs
     entrypoint: src/yhovi_pipeline/flows/economy/employment_jobs.py:employment_jobs_flow
+    tags: ["economy"]
     <<: *common
   - name: economy-earnings
     entrypoint: src/yhovi_pipeline/flows/economy/earnings.py:earnings_flow
+    tags: ["economy"]
     <<: *common
   - name: economy-claimant-count
     entrypoint: src/yhovi_pipeline/flows/economy/claimant_count.py:claimant_count_flow
+    tags: ["economy"]
     <<: *common
   - name: economy-business-demography
     entrypoint: src/yhovi_pipeline/flows/economy/business_demography.py:business_demography_flow
+    tags: ["economy"]
     <<: *common
   - name: economy-gdp-gva
     entrypoint: src/yhovi_pipeline/flows/economy/gdp_gva.py:gdp_gva_flow
+    tags: ["economy"]
     <<: *common
   # -- Society flows ----------------------------------------------------------
   - name: society-health-outcomes
     entrypoint: src/yhovi_pipeline/flows/society/health_outcomes.py:health_outcomes_flow
+    tags: ["society"]
     <<: *common
   - name: society-education-attainment
     entrypoint: src/yhovi_pipeline/flows/society/education_attainment.py:education_attainment_flow
+    tags: ["society"]
     <<: *common
   - name: society-housing-tenure
     entrypoint: src/yhovi_pipeline/flows/society/housing_tenure.py:housing_tenure_flow
+    tags: ["society"]
     <<: *common
   - name: society-deprivation-imd
     entrypoint: src/yhovi_pipeline/flows/society/deprivation_imd.py:deprivation_imd_flow
+    tags: ["society"]
     <<: *common
   - name: society-crime-statistics
     entrypoint: src/yhovi_pipeline/flows/society/crime_statistics.py:crime_statistics_flow
+    tags: ["society"]
     <<: *common
   - name: society-physical-activity
     entrypoint: src/yhovi_pipeline/flows/society/physical_activity.py:physical_activity_flow
+    tags: ["society"]
     <<: *common
   - name: society-digital-inclusion
     entrypoint: src/yhovi_pipeline/flows/society/digital_inclusion.py:digital_inclusion_flow
+    tags: ["society"]
     <<: *common
   # -- Environment flows ------------------------------------------------------
   - name: environment-air-quality
     entrypoint: src/yhovi_pipeline/flows/environment/air_quality.py:air_quality_flow
+    tags: ["environment"]
     <<: *common
   - name: environment-energy-consumption
     entrypoint: src/yhovi_pipeline/flows/environment/energy_consumption.py:energy_consumption_flow
+    tags: ["environment"]
     <<: *common
   # -- Orchestrator -----------------------------------------------------------
   - name: orchestrator-full-refresh
     entrypoint: src/yhovi_pipeline/flows/orchestrator.py:full_refresh_flow
+    tags: ["orchestrator"]
     <<: *common

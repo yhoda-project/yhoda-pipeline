@@ -8,9 +8,11 @@ as per-capita rates.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from prefect import flow
+from prefect.artifacts import create_table_artifact
 from prefect.task_runners import ThreadPoolTaskRunner
 
 from yhovi_pipeline.db.models import ExtractionStatus
@@ -52,6 +54,7 @@ _DATASETS = [
 
 @flow(
     name="economy-claimant-count",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Claimant Count",
     description="Extract DWP claimant count data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -67,6 +70,7 @@ def claimant_count_flow() -> None:
     pop_df = query_population()
 
     failures: list[str] = []
+    results: list[dict[str, Any]] = []
 
     for ds in _DATASETS:
         try:
@@ -92,6 +96,15 @@ def claimant_count_flow() -> None:
                 rows_loaded=rows_loaded,
             )
 
+            results.append(
+                {
+                    "Dataset": ds.dataset_code,
+                    "Rows extracted": len(raw_df),
+                    "Rows loaded": rows_loaded,
+                    "Status": "OK",
+                }
+            )
+
         except Exception as e:
             write_metadata(
                 dataset_code=ds.dataset_code,
@@ -99,7 +112,18 @@ def claimant_count_flow() -> None:
                 status=ExtractionStatus.FAILED,
                 error_message=str(e)[:500],
             )
+            results.append(
+                {
+                    "Dataset": ds.dataset_code,
+                    "Rows extracted": "—",
+                    "Rows loaded": "—",
+                    "Status": "Failed",
+                }
+            )
             failures.append(f"{ds.dataset_code}: {e}")
+
+    if results:
+        create_table_artifact(key="load-summary", table=results, description="Load summary")
 
     if failures:
         error = f"DWP claimant count failed for: {'; '.join(failures)}"
