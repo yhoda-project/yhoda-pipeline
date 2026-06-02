@@ -1,4 +1,4 @@
-# Yorkshire Vitality Observatory — Data Pipeline
+# Yorkshire Vitality Observatory Data Pipeline
 
 [![CI](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml/badge.svg)](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://yhoda-project.github.io/YHODA)
