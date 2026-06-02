@@ -7,6 +7,8 @@ throughout so no real network connection is made.
 
 from __future__ import annotations
 
+import base64
+import email as stdlib_email
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -77,6 +79,15 @@ def _capture_sendmail(smtp_settings: MagicMock) -> tuple[MagicMock, dict]:
     mock_smtp_class = MagicMock(return_value=mock_server)
 
     return mock_smtp_class, captured
+
+
+def _decode_body(msg_str: str) -> str:
+    """Return the decoded plain-text body from a MIME message string."""
+    parsed = stdlib_email.message_from_string(msg_str)
+    payload = parsed.get_payload()
+    if parsed.get("Content-Transfer-Encoding", "").lower() == "base64":
+        return base64.b64decode(payload.strip()).decode("utf-8")
+    return str(payload)
 
 
 # ---------------------------------------------------------------------------
@@ -264,7 +275,7 @@ class TestSendAlertContent:
             patch("smtplib.SMTP", mock_smtp),
         ):
             send_failure_alert("flow", "something broke")
-        assert "retry automatically" in captured["msg"]
+        assert "retry automatically" in _decode_body(captured["msg"])
 
     def test_warning_body_does_not_contain_retry_message(self, smtp_settings: MagicMock) -> None:
         mock_smtp, captured = _capture_sendmail(smtp_settings)
@@ -273,7 +284,7 @@ class TestSendAlertContent:
             patch("smtplib.SMTP", mock_smtp),
         ):
             send_warning_alert("flow", "low row count")
-        assert "retry automatically" not in captured["msg"]
+        assert "retry automatically" not in _decode_body(captured["msg"])
 
     def test_metadata_included_in_body(self, smtp_settings: MagicMock) -> None:
         mock_smtp, captured = _capture_sendmail(smtp_settings)
@@ -282,9 +293,10 @@ class TestSendAlertContent:
             patch("smtplib.SMTP", mock_smtp),
         ):
             send_failure_alert("flow", "error", metadata={"rows": 0, "source": "nomis"})
-        assert "Details:" in captured["msg"]
-        assert "rows: 0" in captured["msg"]
-        assert "source: nomis" in captured["msg"]
+        body = _decode_body(captured["msg"])
+        assert "Details:" in body
+        assert "rows: 0" in body
+        assert "source: nomis" in body
 
     def test_comma_separated_recipients_split_correctly(self, smtp_settings: MagicMock) -> None:
         smtp_settings.alert_group_email = "a@sheffield.ac.uk, b@sheffield.ac.uk"
