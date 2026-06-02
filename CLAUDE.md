@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 YHODA (Yorkshire & Humber Office for Data Analytics) is a **Prefect v3 ETL pipeline** that collects, transforms, and warehouses socioeconomic, health, and environmental indicators for all 22 Yorkshire Local Authority Districts (LADs) into a PostgreSQL data warehouse. The pipeline supports the [Yorkshire Engagement Portal](https://yorkshireportal.org/) and its [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
 
-**Current Status:** Phase 1 complete (scaffolding). Phase 2 (implementation) is pending — all flow and task bodies contain `# TODO: implement` stubs.
+**Current Status:** Phase 2 substantially complete. Live API connectors for Nomis, DWP Stat-Xplore, and NHS Fingertips are implemented. Static-release flows log and return; their data is pre-loaded via `load_csv.py`. Email alerting, Prefect UI improvements (flow run names, tags, artifacts), and unit tests are in place. Remaining work: operational runbook, handover documentation, PowerBI connection guide.
 
 ## Project Context
 
@@ -113,6 +113,7 @@ Each source maps to a dedicated extract task in `src/yhovi_pipeline/tasks/extrac
 ### Key Modules
 
 - **`config.py`** — Pydantic Settings singleton. Always use `get_settings()` to access config; never read `os.environ` directly (exception: `db/migrations/env.py`). Secrets are `SecretStr` — call `.get_secret_value()` only at the call site.
+- **`utils/notify.py`** — Email alert system via Gmail SMTP. Call `send_failure_alert()`, `send_warning_alert()`, `send_success_alert()` from flow except blocks. INFO severity logs only. Built-in deduplication (30 min window) and rate limiting (10/min).
 - **`db/models.py`** — SQLAlchemy 2.0 ORM with three tables: `Indicator` (fact), `DatasetMetadata` (audit/run history), `GeoLookup` (LSOA→MSOA→LAD→Region dimension).
 - **`tasks/transform/`** — `validate.py` (schema & LAD validation), `normalise.py` (canonical Indicator shape), `geo.py` (geography aggregation).
 - **`tasks/load/database.py`** — Upserts indicators and writes run metadata.
