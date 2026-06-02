@@ -122,7 +122,11 @@ cp .env.example .env
 | `NOMIS_API_KEY` | No | Nomis API key — public endpoints work without one, key gives higher rate limits |
 | `PREFECT_API_URL` | No | URL of your Prefect server (only needed to register/run deployments) |
 | `PREFECT_WORK_POOL` | No | Prefect work pool name (default: `yhovi-default`) |
-| `LOG_LEVEL` | No | Python logging level (default: `INFO`) |
+| `SMTP_USERNAME` | No | Sheffield email address used to send pipeline failure alerts |
+| `SMTP_PASSWORD` | No | Google App Password (see [docs/pipeline-email-alerts.md](docs/pipeline-email-alerts.md)) |
+| `ALERT_GROUP_EMAIL` | No | Recipient address(es) for pipeline alerts — comma-separated list supported |
+| `ALERT_SUCCESS_ENABLED` | No | Set to `true` to also receive an email on every successful run (default: `false`) |
+| `LOG_LEVEL` | No | Python logging level (default: `INFO`). Options: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` |
 
 ### 3. Run database migrations
 
@@ -226,9 +230,11 @@ YHODA/
 │           ├── load_industry.py       # One-time loader for industry_business + KPI tables
 │           ├── load_neighbourhoods.py # One-time loader for LSOA indicator data
 │           ├── seed_geo_lookup.py     # One-time geo hierarchy seeder
-│           └── geo_lookups.py         # LRU-cached LSOA → LAD lookup
+│           ├── geo_lookups.py         # LRU-cached LSOA → LAD lookup
+│           └── notify.py             # Email alert system (Gmail SMTP)
 ├── docs/
 │   ├── entity-relationship-diagram.md # Database ERD (Mermaid)
+│   ├── pipeline-email-alerts.md       # Email alert system — setup and usage
 │   └── tutorial-pgadmin.md            # How to connect and query the database with pgAdmin
 ├── tests/
 │   ├── unit/
@@ -282,7 +288,7 @@ automatically on merge to `main`.
 
 2. Add a normaliser in `tasks/transform/normalise.py` if the source has a non-standard date or value format.
 
-3. Create a flow in the appropriate domain directory. Use `@flow(name="<domain>/<name>", task_runner=ThreadPoolTaskRunner(max_workers=4))`.
+3. Create a flow in the appropriate domain directory. Use `@flow(name="<domain>/<name>", flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — <Human Name>", task_runner=ThreadPoolTaskRunner(max_workers=4))`. Emit a `create_table_artifact` at the end of the flow with a load summary.
 
 4. Register the deployment in `prefect.yaml` following the existing pattern.
 
