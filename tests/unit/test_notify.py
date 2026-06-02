@@ -15,6 +15,7 @@ import pytest
 
 import yhovi_pipeline.utils.notify as notify_module
 from yhovi_pipeline.utils.notify import (
+    _RATE_LIMIT_WINDOW_SECONDS,
     Severity,
     _dedup_key,
     _is_duplicate,
@@ -170,7 +171,7 @@ class TestIsRateLimited:
     def test_resets_after_window_expires(self, monkeypatch: pytest.MonkeyPatch) -> None:
         for _ in range(11):
             _is_rate_limited()
-        monkeypatch.setattr(notify_module, "_rate_window_start", 0.0)
+        monkeypatch.setattr(notify_module, "_rate_window_start", -(_RATE_LIMIT_WINDOW_SECONDS + 1))
         assert _is_rate_limited() is False
 
 
