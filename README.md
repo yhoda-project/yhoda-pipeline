@@ -35,7 +35,7 @@ flowchart LR
 
 ---
 
-## Quickstart
+## Quickstart (for developers on the VM)
 
 ### Prerequisites
 
@@ -70,6 +70,7 @@ uv run python -m yhovi_pipeline.utils.load_neighbourhoods
 uv run prefect deploy --all --no-prompt
 uv run python -c "from yhovi_pipeline.config import get_settings; print('ok')"
 uv run pytest
+uv run ruff check src/ tests/
 ```
 
 ---
