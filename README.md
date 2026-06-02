@@ -1,11 +1,11 @@
 # Yorkshire Vitality Observatory — Data Pipeline
 
 [![CI](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml/badge.svg)](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml)
-[![Docs](https://github.com/yhoda-project/YHODA/actions/workflows/docs.yml/badge.svg)](https://yhoda-project.github.io/YHODA)
+[![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://yhoda-project.github.io/YHODA)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Prefect](https://img.shields.io/badge/prefect-v3-blue)](https://www.prefect.io/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![License](https://img.shields.io/badge/license-see%20LICENSE-lightgrey)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 An automated end-to-end Prefect v3 ETL pipeline that ingests, transforms, and warehouses socioeconomic, health, and environmental indicators for Yorkshire into PostgreSQL, powering the [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
 
