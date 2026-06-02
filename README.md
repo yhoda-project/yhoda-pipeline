@@ -15,14 +15,14 @@ An automated end-to-end Prefect v3 ETL pipeline that ingests, transforms, and wa
 
 Full documentation is at **[yhoda-project.github.io/YHODA](https://yhoda-project.github.io/YHODA)**, including:
 
-- [Onboarding](https://yhoda-project.github.io/YHODA/onboarding/) — get set up on the pipeline
-- [Architecture](https://yhoda-project.github.io/YHODA/architecture/overview/) — how the system works
-- [Runbooks](https://yhoda-project.github.io/YHODA/runbooks/) — what to do when something goes wrong
-- [Reference](https://yhoda-project.github.io/YHODA/reference/environment-variables/) — environment variables, ERD, glossary
+- [Onboarding](https://yhoda-project.github.io/YHODA/onboarding/) - get set up on the pipeline
+- [Architecture](https://yhoda-project.github.io/YHODA/architecture/overview/) - how the system works
+- [Runbooks](https://yhoda-project.github.io/YHODA/runbooks/) - what to do when something goes wrong
+- [Reference](https://yhoda-project.github.io/YHODA/reference/environment-variables/) - environment variables, ERD, glossary
 
 ---
 
-## How it works
+## Overview
 
 ```mermaid
 flowchart LR
