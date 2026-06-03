@@ -8,6 +8,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml          # validates prefect.yaml, ci.yml, this file
+        exclude: ^mkdocs\.yml$
       - id: check-toml          # validates pyproject.toml
       - id: check-merge-conflict
       - id: debug-statements    # catches breakpoint() / import pdb left in

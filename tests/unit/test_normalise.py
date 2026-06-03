@@ -498,7 +498,7 @@ class TestNormaliseToIndicator:
 
 
 class TestNormaliseFingertips:
-    def test_sex_filter_keeps_only_matching_rows(self) -> None:
+    def test_gender_filter_keeps_only_matching_rows(self) -> None:
         df = pd.concat(
             [
                 _fingertips_df(sex="Male", value=80.0),
@@ -510,7 +510,7 @@ class TestNormaliseFingertips:
             dataset_code="sheleb_m",
             indicator_id="life_expectancy_male",
             indicator_name="Life expectancy (male)",
-            sex_filter="Male",
+            gender_filter="Male",
             age_filter="All ages",
         )
         assert len(result) == 1
@@ -528,7 +528,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert len(result) == 1
@@ -547,7 +547,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert len(result) == 1
@@ -565,7 +565,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert len(result) == 1
@@ -580,7 +580,7 @@ class TestNormaliseFingertips:
                 dataset_code="sheleb_m",
                 indicator_id="x",
                 indicator_name="x",
-                sex_filter="Persons",
+                gender_filter="Persons",
                 age_filter="All ages",
             )
 
@@ -597,7 +597,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="life_exp",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert len(result) == 1
@@ -609,7 +609,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert result["reference_period"].iloc[0] == date(2020, 1, 1)
@@ -620,7 +620,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert result["reference_period"].iloc[0] == date(2020, 1, 1)
@@ -637,7 +637,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert len(result) == 1
@@ -649,7 +649,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
             unit="Years",
         )
@@ -661,7 +661,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert result["source"].iloc[0] == "fingertips"
@@ -672,7 +672,7 @@ class TestNormaliseFingertips:
             dataset_code="x",
             indicator_id="x",
             indicator_name="x",
-            sex_filter="Persons",
+            gender_filter="Persons",
             age_filter="All ages",
         )
         assert _INDICATOR_COLS.issubset(result.columns)

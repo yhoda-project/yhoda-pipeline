@@ -1,0 +1,81 @@
+site_name: YHODA Pipeline Documentation
+site_url: https://yhoda-project.github.io/YHODA
+repo_url: https://github.com/yhoda-project/YHODA
+repo_name: yhoda-project/YHODA
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/logo.png
+  favicon: assets/favicon.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+    - search.suggest
+    - content.tooltips
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Onboarding: onboarding.md
+
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Pipeline: architecture/pipeline.md
+      - Database: architecture/database.md
+      - Data Sources: architecture/data-sources.md
+
+  - How-to guides:
+      - Query the database: how-to/query-the-database.md
+      - Email alerts: how-to/email-alerts.md
+      - Add a new dataset: how-to/add-a-dataset.md
+      - Re-run a flow manually: how-to/re-run-a-flow.md
+      - Connect Power BI: how-to/update-power-bi.md
+
+  - Runbooks:
+      - Index: runbooks/index.md
+      - A flow is failing: runbooks/flow-is-failing.md
+      - Data looks wrong: runbooks/data-looks-wrong.md
+      - Pipeline has stopped running: runbooks/pipeline-not-running.md
+      - API key has expired: runbooks/api-key-expired.md
+
+  - Reference:
+      - Entity relationship diagram: reference/entity-relationship-diagram.md
+      - Environment variables: reference/environment-variables.md
+      - Glossary: reference/glossary.md
+
+
+extra:
+    social:
+      - icon: fontawesome/brands/github
+        link: https://github.com/yhoda-project/YHODA
+
+copyright: Copyright &copy; 2026 YHODA
+
+extra_css:
+  - assets/extra.css

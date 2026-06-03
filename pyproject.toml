@@ -80,6 +80,7 @@ filterwarnings = [
 
 [dependency-groups]
 dev = [
+    "mkdocs-material>=9.7.6",
     "mypy>=1.19.1",
     "pre-commit>=4.5.1",
 ]

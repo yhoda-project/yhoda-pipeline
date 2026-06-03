@@ -1,0 +1,151 @@
+Title,Milestone,Label,Start Date,Target Date,Priority,Description
+Secure API Credentials,Shared Infrastructure,credentials,2026-02-24,2026-03-07,Critical,"Register and verify access to all external APIs required for prototype ingestion. This is on the critical path — extract tasks cannot be tested without credentials.
+
+## Checklist
+- [ ] Register for NOMIS API key (nomisweb.co.uk)
+- [ ] Verify ONS Open Data access (no key required, but confirm endpoint availability)
+- [ ] Register for DWP Stat-Xplore API key (stat-xplore.dwp.gov.uk)
+- [ ] Store credentials securely and add to .env on dev environment"
+Database Setup and Geography Layer,Shared Infrastructure,database,2026-02-24,2026-03-07,Critical,"Stand up the dev SQL Server schema and populate the geography dimension table that underpins all spatial aggregation.
+
+## Checklist
+- [ ] Run ``alembic upgrade head`` to create Indicator, DatasetMetadata, and GeoLookup tables
+- [ ] Download LSOA→MSOA→LAD→Region mappings from ONS Open Geography Portal
+- [ ] Seed GeoLookup table with mappings for all 22 Yorkshire LADs
+- [ ] Validate row counts and spot-check a few LSOA→LAD lookups"
+Shared Transform and Load Pipeline,Shared Infrastructure,pipeline,2026-02-28,2026-03-14,Critical,"Implement the reusable transform and load tasks that every flow depends on. This is the core ETL plumbing — nothing can run end-to-end until these work.
+
+## Transform tasks (tasks/transform/)
+- [ ] validate.py: validate_schema() — check required columns and non-zero rows; validate_yorkshire_lads() — warn on missing LAD codes vs YORKSHIRE_LAD_CODES
+- [ ] normalise.py: normalise_to_indicator() — map source-specific DataFrames to canonical Indicator schema
+- [ ] geo.py: aggregate_to_lad() — join sub-LAD data (LSOA/MSOA) with GeoLookup and aggregate to LAD level
+
+## Load tasks (tasks/load/)
+- [ ] sql_server.py: upsert_indicators() — MERGE or DELETE+INSERT on (indicator_id, lad_code, reference_period) composite key
+- [ ] sql_server.py: write_metadata() — insert DatasetMetadata audit record per flow run
+
+## Utilities
+- [ ] utils/metadata.py: build_metadata_record() — factory for DatasetMetadata ORM instances
+- [ ] utils/geo_lookups.py: get_geo_lookup() and lsoa_to_lad() — LRU-cached geography lookups
+
+## Tests
+- [ ] Unit tests for all transform tasks (mock DB and API calls)
+- [ ] Unit tests for load tasks and utility functions"
+Nomis and ONS API Connectors,Prototype Ingestion,extract,2026-03-10,2026-03-28,High,"Build extract tasks for NOMIS and ONS — the two primary sources for the economy domain.
+
+## Extract tasks
+- [ ] nomis.py: extract_bres() — Business Register Employment Survey (employment by industry at LAD level)
+- [ ] nomis.py: extract_aps() — Annual Population Survey (economic activity, qualifications)
+- [ ] ons.py: extract_regional_accounts() — GVA/GDP data from ONS Open Data API
+
+## Acceptance criteria
+- Each task returns a pandas DataFrame filtered to Yorkshire LADs
+- Handles API pagination and rate limits
+- Unit tests with mocked API responses"
+DWP Stat-Xplore Connector,Prototype Ingestion,extract,2026-03-10,2026-03-21,High,"Build the DWP Stat-Xplore extract task for claimant count data.
+
+## Extract task
+- [ ] dwp.py: extract_claimant_count() — call Stat-Xplore API for Universal Credit / JSA claimant counts by LAD and month
+
+## Acceptance criteria
+- Returns DataFrame with claimant counts for all 22 Yorkshire LADs
+- Uses settings.dwp_api_key.get_secret_value() for auth
+- Handles Stat-Xplore JSON cube response format
+- Unit tests with mocked API responses"
+Prototype Economy Flows,Prototype Ingestion,flow,2026-03-24,2026-04-11,High,"Wire up the first three end-to-end flows: extract → validate → normalise → load.
+
+## Flows
+- [ ] flows/economy/employment_jobs.py — Nomis BRES/APS → transform → load
+- [ ] flows/economy/claimant_count.py — DWP Stat-Xplore → transform → load
+- [ ] flows/economy/gdp_gva.py — ONS Regional Accounts → transform → load
+
+## Acceptance criteria
+- Each flow runs end-to-end on dev environment
+- Data lands correctly in Indicator table with proper upsert behaviour
+- DatasetMetadata audit records written for each run
+- Prefect UI shows successful flow runs with task-level logging"
+Prototype Testing and Milestone Review,Prototype Ingestion,milestone,2026-04-06,2026-04-24,High,"Integration testing and stakeholder demo — the End-Apr 2026 deliverable.
+
+## Testing
+- [ ] Integration tests for all 3 economy flows against dev SQL Server
+- [ ] Verify upsert idempotency (re-running doesn't duplicate data)
+- [ ] Data quality checks — spot-check values against source websites
+
+## Milestone review
+- [ ] Stakeholder demo of working Nomis/ONS/DWP pipelines
+- [ ] Document scope adjustments needed for scale-out phase
+- [ ] Sign-off to proceed to scale-out"
+Remaining Extract Connectors,Scale-out,extract,2026-04-28,2026-05-15,Medium,"Build extract tasks for the remaining 5 data sources. Some APIs are TBC.
+
+## Extract tasks
+- [ ] ons.py: extract_business_demography() — business births, deaths, survival rates
+- [ ] ons.py: extract_housing_tenure() — housing tenure breakdowns from Census
+- [ ] fingertips.py: extract_fingertips_indicators() — NHS public health indicators at LAD level
+- [ ] sport_england.py: extract_active_lives() — physical activity rates (API TBC)
+- [ ] ofcom.py: extract_connected_nations() — broadband coverage and speed
+- [ ] defra.py: extract_aurn() — air quality monitoring (PM2.5, PM10, NO2, O3)
+- [ ] beis.py: extract_energy_consumption() — sub-national electricity and gas stats (API TBC)
+
+## Risks
+- Sport England and BEIS/DESNZ APIs not yet confirmed — may need CSV download fallback
+- Fingertips returns data at multiple geographies — need LSOA→LAD aggregation"
+Remaining Flows and Orchestrator,Scale-out,flow,2026-05-08,2026-05-26,Medium,"Wire up the remaining 10 domain flows plus the master orchestrator.
+
+## Economy
+- [ ] flows/economy/business_demography.py
+
+## Society (7 flows)
+- [ ] health_outcomes, education_attainment, housing_tenure, deprivation_imd, crime_statistics, physical_activity, digital_inclusion
+
+## Environment (2 flows)
+- [ ] air_quality, energy_consumption
+
+## Orchestrator
+- [ ] flows/orchestrator.py: full_refresh_flow() — run all 13 domain flows in sequence"
+Quality Hardening and Full Test Suite,Scale-out,quality,2026-05-22,2026-05-29,Medium,"Harden error handling and complete test coverage before handover.
+
+## Error handling
+- [ ] API rate limit handling and backoff strategies
+- [ ] Partial failure recovery (some flows fail, others continue)
+- [ ] Input validation edge cases (empty responses, schema changes, missing LADs)
+
+## Testing
+- [ ] Integration tests for all 13 flows
+- [ ] Upsert idempotency verification
+- [ ] Orchestrator end-to-end run
+
+## Scale-out milestone review
+- [ ] Stakeholder demo of full pipeline"
+Documentation and Runbooks,Handover,documentation,2026-06-01,2026-06-12,High,"Operational documentation for the YHODA team to maintain the pipeline independently.
+
+## Runbooks
+- [ ] Restart a failed flow
+- [ ] Add a new dataset / data source
+- [ ] Run and rollback Alembic migrations
+- [ ] Troubleshoot common errors (API failures, DB issues, data quality)
+
+## Reference docs
+- [ ] Data dictionary — all indicators, sources, update frequencies, units
+- [ ] Schema documentation — Indicator, GeoLookup, DatasetMetadata tables
+- [ ] Architecture overview diagram"
+CI/CD Hardening and Monitoring,Handover,infra,2026-06-08,2026-06-19,Medium,"Production-readiness improvements to CI/CD and observability.
+
+## CI/CD
+- [ ] Review and harden GitHub Actions workflow
+- [ ] Add branch protection rules if not already in place
+
+## Monitoring
+- [ ] Prefect flow failure alerts (email or Slack)
+- [ ] Data freshness checks — alert if a dataset hasn't updated on schedule
+- [ ] Pipeline health dashboard (success rates, run durations, row counts)"
+Team Training and Project Handover,Handover,handover,2026-06-15,2026-06-26,Critical,"Hands-on training and formal project close.
+
+## Training sessions
+- [ ] Running pipelines — Prefect UI, triggering flows, reading logs
+- [ ] Maintaining the codebase — adding sources, modifying transforms, running tests
+- [ ] Troubleshooting — common failure modes, runbook walkthrough
+
+## Handover
+- [ ] Confirm team can operate independently
+- [ ] Final stakeholder review and sign-off
+- [ ] Project close"
