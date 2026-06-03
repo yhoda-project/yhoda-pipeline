@@ -1,6 +1,7 @@
 # Yorkshire Vitality Observatory Data Pipeline
 
 [![CI](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml/badge.svg)](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/yhoda-project/YHODA/branch/main/graph/badge.svg)](https://codecov.io/gh/yhoda-project/YHODA)
 [![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://yhoda-project.github.io/YHODA)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Prefect](https://img.shields.io/badge/prefect-v3-blue)](https://www.prefect.io/)
