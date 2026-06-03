@@ -356,7 +356,7 @@ def normalise_fingertips(
     dataset_code: str,
     indicator_id: str,
     indicator_name: str,
-    sex_filter: str,
+    gender_filter: str,
     age_filter: str,
     unit: str | None = None,
 ) -> pd.DataFrame:
@@ -372,7 +372,7 @@ def normalise_fingertips(
         indicator_id: Machine-readable indicator identifier stored in the DB
             (e.g. ``"life_expectancy_male"``).
         indicator_name: Human-readable indicator name.
-        sex_filter: Value of the ``Sex`` column to keep
+        gender_filter: Value of the ``Sex`` column to keep
             (``"Male"``, ``"Female"``, or ``"Persons"``).
         age_filter: Value of the ``Age`` column to keep (e.g. ``"All ages"``
             or ``"10+ yrs"``). Varies by indicator — verify from the API
@@ -389,7 +389,7 @@ def normalise_fingertips(
     # the same response as the main LAD-level aggregates (null Category Type).
     # We only want the aggregates.
     df = df[
-        (df["Sex"] == sex_filter) & (df["Age"] == age_filter) & (df["Category Type"].isna())
+        (df["Sex"] == gender_filter) & (df["Age"] == age_filter) & (df["Category Type"].isna())
     ].copy()
 
     # Filter to Yorkshire LADs
@@ -397,7 +397,7 @@ def normalise_fingertips(
 
     if df.empty:
         raise ValueError(
-            f"No Fingertips data for sex={sex_filter!r} in Yorkshire LADs "
+            f"No Fingertips data for sex={gender_filter!r} in Yorkshire LADs "
             f"(dataset_code={dataset_code!r}). Check indicator ID and sex filter."
         )
 
@@ -440,7 +440,7 @@ def normalise_fingertips(
         "Normalised %d rows for %s (%s) from Fingertips",
         len(result),
         indicator_id,
-        sex_filter,
+        gender_filter,
     )
     return result
 
