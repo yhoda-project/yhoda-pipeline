@@ -68,6 +68,17 @@ ignore_missing_imports = true
 # ---------------------------------------------------------------------------
 # Pytest
 # ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/yhovi_pipeline"]
+omit = [
+    "*/migrations/*",
+    "*/db/migrations/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
