@@ -1,3 +1,3 @@
 """Yorkshire Vitality Observatory — Prefect v3 ETL pipeline."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
