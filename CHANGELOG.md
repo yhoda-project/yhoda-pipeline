@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/yhoda-project/yhoda-pipeline/compare/yhovi-pipeline-v0.1.2...yhovi-pipeline-v0.1.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* ci update ([3548d8d](https://github.com/yhoda-project/yhoda-pipeline/commit/3548d8d509aadb76e85c8d9231c4cdb9cf57f59a))
+
 ## [0.1.2](https://github.com/yhoda-project/yhoda-pipeline/compare/yhovi-pipeline-v0.1.1...yhovi-pipeline-v0.1.2) (2026-06-03)
 
 
