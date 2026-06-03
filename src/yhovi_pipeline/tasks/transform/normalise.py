@@ -436,7 +436,7 @@ def normalise_fingertips(
         subset=["indicator_id", "lad_code", "reference_period"], keep="last"
     )
 
-    logger.info(
+    logger.info(  # lgtm[py/clear-text-logging-sensitive-data]
         "Normalised %d rows for %s (%s) from Fingertips",
         len(result),
         indicator_id,
