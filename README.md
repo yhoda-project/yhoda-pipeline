@@ -1,8 +1,8 @@
 # Yorkshire Vitality Observatory Data Pipeline
 
 [![CI](https://github.com/yhoda-project/yhoda-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/yhoda-project/yhoda-pipeline/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/yhoda-project/yhoda-pipeline/graph/badge.svg?token=L2VWHIOGTL)](https://codecov.io/gh/yhoda-project/yhoda-pipeline)
 [![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://yhoda-project.github.io/yhoda-pipeline)
+[![codecov](https://codecov.io/gh/yhoda-project/yhoda-pipeline/branch/main/graph/badge.svg?token=L2VWHIOGTL)](https://codecov.io/gh/yhoda-project/yhoda-pipeline)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Prefect](https://img.shields.io/badge/prefect-v3-blue)](https://www.prefect.io/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
