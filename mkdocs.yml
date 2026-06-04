@@ -52,6 +52,7 @@ nav:
 
   - How-to guides:
       - Query the database: how-to/query-the-database.md
+      - Load a static dataset: how-to/load-static-data.md
       - Email alerts: how-to/email-alerts.md
       - Add a new dataset: how-to/add-a-dataset.md
       - Re-run a flow manually: how-to/re-run-a-flow.md
