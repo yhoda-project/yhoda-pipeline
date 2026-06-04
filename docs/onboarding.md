@@ -57,7 +57,7 @@ Open `.env` and fill in your credentials. The table below describes every variab
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `SQL_SERVER_CONNECTION_STRING` | Yes | SQLAlchemy connection string for the PostgreSQL database |
+| `DATABASE_URL` | Yes | SQLAlchemy connection string for the PostgreSQL database |
 | `DWP_API_KEY` | Yes | DWP Stat-Xplore API key - request from the DWP Stat-Xplore portal |
 | `NOMIS_API_KEY` | No | NOMIS API key - public endpoints work without one, but a key removes rate limits |
 | `PREFECT_API_URL` | Yes | URL of the local Prefect server (e.g. `http://127.0.0.1:4200/api`) |
