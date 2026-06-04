@@ -12,7 +12,7 @@ This page walks a new developers through everything needed to get set up on the 
 | VM - production (`yhoda-prod.shef.ac.uk`) | Same as above - request both at the same time |
 | PostgreSQL database | Ask an existing team member to create credentials for you (see below) |
 | Prefect UI | No credentials needed - it's served locally on the VM via SSH tunnel (see below) |
-| GitHub repository | Request access to [yhoda-project/YHODA](https://github.com/yhoda-project/YHODA) from an existing team member |
+| GitHub repository | Request access to [yhoda-project/yhoda-pipeline](https://github.com/yhoda-project/yhoda-pipeline) from an existing team member |
 
 Allow a few working days for the TopDesk ticket to be fulfilled.
 
@@ -48,8 +48,8 @@ tutorial to connect via pgAdmin from your laptop.
 ## 3. Clone the repository and configure your environment
 
 ```bash
-git clone https://github.com/yhoda-project/YHODA.git
-cd YHODA
+git clone https://github.com/yhoda-project/yhoda-pipeline.git
+cd yhoda-pipeline
 cp .env.example .env
 ```
 
