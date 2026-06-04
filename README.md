@@ -14,7 +14,7 @@ An automated end-to-end Prefect v3 ETL pipeline that ingests, transforms, and wa
 
 ## Documentation
 
-Full documentation is at **[yhoda-project.github.io/YHODA](https://yhoda-project.github.io/YHODA)**, including:
+Full documentation is at **[yhoda-project.github.io/yhoda-pipeline](https://yhoda-project.github.io/yhoda-pipeline)**, including:
 
 - [Onboarding](https://yhoda-project.github.io/YHODA/onboarding/) - get set up on the pipeline
 - [Architecture](https://yhoda-project.github.io/YHODA/architecture/overview/) - how the system works
