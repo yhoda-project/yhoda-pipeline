@@ -1,7 +1,7 @@
 site_name: YHODA Pipeline Documentation
-site_url: https://yhoda-project.github.io/YHODA
-repo_url: https://github.com/yhoda-project/YHODA
-repo_name: yhoda-project/YHODA
+site_url: https://yhoda-project.github.io/yhoda-pipeline
+repo_url: https://github.com/yhoda-project/yhoda-pipeline
+repo_name: yhoda-project/yhoda-pipeline
 edit_uri: edit/main/docs/
 
 theme:
@@ -73,7 +73,7 @@ nav:
 extra:
     social:
       - icon: fontawesome/brands/github
-        link: https://github.com/yhoda-project/YHODA
+        link: https://github.com/yhoda-project/yhoda-pipeline
 
 copyright: Copyright &copy; 2026 YHODA
 

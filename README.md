@@ -1,8 +1,8 @@
 # Yorkshire Vitality Observatory Data Pipeline
 
-[![CI](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml/badge.svg)](https://github.com/yhoda-project/YHODA/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/yhoda-project/YHODA/graph/badge.svg?token=L2VWHIOGTL)](https://codecov.io/gh/yhoda-project/YHODA)
-[![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://yhoda-project.github.io/YHODA)
+[![CI](https://github.com/yhoda-project/yhoda-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/yhoda-project/yhoda-pipeline/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/yhoda-project/yhoda-pipeline/graph/badge.svg?token=L2VWHIOGTL)](https://codecov.io/gh/yhoda-project/yhoda-pipeline)
+[![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://yhoda-project.github.io/yhoda-pipeline)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Prefect](https://img.shields.io/badge/prefect-v3-blue)](https://www.prefect.io/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -14,12 +14,12 @@ An automated end-to-end Prefect v3 ETL pipeline that ingests, transforms, and wa
 
 ## Documentation
 
-Full documentation is at **[yhoda-project.github.io/YHODA](https://yhoda-project.github.io/YHODA)**, including:
+Full documentation is at **[yhoda-project.github.io/yhoda-pipeline](https://yhoda-project.github.io/yhoda-pipeline)**, including:
 
-- [Onboarding](https://yhoda-project.github.io/YHODA/onboarding/) - get set up on the pipeline
-- [Architecture](https://yhoda-project.github.io/YHODA/architecture/overview/) - how the system works
-- [Runbooks](https://yhoda-project.github.io/YHODA/runbooks/) - what to do when something goes wrong
-- [Reference](https://yhoda-project.github.io/YHODA/reference/environment-variables/) - environment variables, ERD, glossary
+- [Onboarding](https://yhoda-project.github.io/yhoda-pipeline/onboarding/) - get set up on the pipeline
+- [Architecture](https://yhoda-project.github.io/yhoda-pipeline/architecture/overview/) - how the system works
+- [Runbooks](https://yhoda-project.github.io/yhoda-pipeline/runbooks/) - what to do when something goes wrong
+- [Reference](https://yhoda-project.github.io/yhoda-pipeline/reference/environment-variables/) - environment variables, ERD, glossary
 
 ---
 
@@ -48,8 +48,8 @@ flowchart LR
 ### Install
 
 ```bash
-git clone https://github.com/yhoda-project/YHODA.git
-cd YHODA
+git clone https://github.com/yhoda-project/yhoda-pipeline.git
+cd yhoda-pipeline
 uv sync --extra dev
 cp .env.example .env  # then fill in DATABASE_URL and DWP_API_KEY at minimum
 ```
