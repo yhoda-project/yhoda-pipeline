@@ -18,11 +18,12 @@ import re
 from datetime import UTC, date, datetime
 
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.orm import Session
 
 from yhovi_pipeline.config import YORKSHIRE_LAD_CODES, get_settings
-from yhovi_pipeline.db.models import Indicator
+from yhovi_pipeline.db.models import DatasetMetadata, ExtractionStatus, Indicator
 
 # Map dataset codes to their indicator metadata.
 # indicator_id is a short machine-readable key; indicator_name is human-readable.
@@ -651,6 +652,31 @@ def load_long_dataset(
     return len(records)
 
 
+def _write_csv_metadata(
+    engine: Engine,
+    dataset_code: str,
+    status: ExtractionStatus,
+    rows_loaded: int | None = None,
+    error_message: str | None = None,
+) -> None:
+    source = DATASET_REGISTRY[dataset_code]["source"]
+    now = datetime.now(UTC)
+    record = DatasetMetadata(
+        dataset_code=dataset_code,
+        source=source,
+        extraction_status=status,
+        rows_extracted=rows_loaded,
+        rows_loaded=rows_loaded,
+        extracted_at=now if status == ExtractionStatus.SUCCESS else None,
+        loaded_at=now if rows_loaded else None,
+        error_message=error_message,
+        created_at=now,
+    )
+    with Session(engine) as session:
+        session.add(record)
+        session.commit()
+
+
 def load_all() -> None:
     """Load all available preprocessed CSVs into the database."""
     shared = get_settings().shared_drive_path
@@ -659,6 +685,7 @@ def load_all() -> None:
             "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
         )
     base_path = f"{shared}/{_OBS_SUBDIR}"
+    engine = create_engine(get_settings().database_url.get_secret_value())
 
     total = 0
     for dataset_code, rel_path in CSV_FILES:
@@ -667,8 +694,12 @@ def load_all() -> None:
         try:
             count = load_dataset(path, dataset_code)
             total += count
+            _write_csv_metadata(engine, dataset_code, ExtractionStatus.SUCCESS, rows_loaded=count)
         except Exception as e:
             print(f"  ERROR loading {dataset_code}: {e}")
+            _write_csv_metadata(
+                engine, dataset_code, ExtractionStatus.FAILED, error_message=str(e)[:500]
+            )
 
     for dataset_code, rel_path, lad_code_col, lad_name_col, year_col, value_col in LONG_CSV_FILES:
         path = f"{base_path}/{rel_path}"
@@ -678,8 +709,12 @@ def load_all() -> None:
                 path, dataset_code, lad_code_col, lad_name_col, year_col, value_col
             )
             total += count
+            _write_csv_metadata(engine, dataset_code, ExtractionStatus.SUCCESS, rows_loaded=count)
         except Exception as e:
             print(f"  ERROR loading {dataset_code}: {e}")
+            _write_csv_metadata(
+                engine, dataset_code, ExtractionStatus.FAILED, error_message=str(e)[:500]
+            )
 
     print(f"\nDone. Total rows upserted: {total}")
 
