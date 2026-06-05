@@ -63,6 +63,7 @@ uv run python -m yhovi_pipeline.utils.load_csv
 uv run python -m yhovi_pipeline.utils.load_jobs
 uv run python -m yhovi_pipeline.utils.load_industry
 uv run python -m yhovi_pipeline.utils.load_neighbourhoods
+uv run python -m yhovi_pipeline.utils.compute_correlations
 ```
 
 ### Register deployments and verify

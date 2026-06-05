@@ -19,7 +19,7 @@ Use this process when:
 
 The loader expects one of two formats.
 
-**Wide format** (most common) — one row per LAD, one column per year:
+**Wide format** (most common) - one row per LAD, one column per year:
 
 | LAD_Name  | LAD_Code   | 2020 | 2021 | 2022 |
 |-----------|------------|------|------|------|
@@ -34,7 +34,7 @@ Non-Yorkshire rows are filtered out automatically. Null values are dropped. Ever
 
 ---
 
-## Step 1 — Find the dataset code
+## Step 1 - Find the dataset code
 
 Every indicator has a short dataset code defined in `DATASET_REGISTRY` inside `src/yhovi_pipeline/utils/load_csv.py`. For example, `eejer` maps to employment rate.
 
@@ -52,7 +52,7 @@ If the indicator is not yet in `DATASET_REGISTRY`, add it following the existing
 
 ---
 
-## Step 2 — Place the file
+## Step 2 - Place the file
 
 Copy the CSV to the `data/` folder at the root of the repository. This folder is gitignored - files placed here are never committed.
 
@@ -62,7 +62,7 @@ cp /path/to/my_file.csv data/my_file.csv
 
 ---
 
-## Step 3 — Load the file
+## Step 3 - Load the file
 
 Source your environment and run the loader from the VM:
 
@@ -101,14 +101,14 @@ The output will report the number of rows upserted. If `0 rows upserted` is prin
 
 ## Load all historical data at once
 
-To load the full set of preprocessed CSVs from the shared YHODA drive in one go:
+To load the full set of preprocessed CSVs in one go, ensure `SHARED_DRIVE_PATH` is set in your `.env`, then run:
 
 ```bash
 export $(grep -v '^#' .env | xargs)
 uv run python -m yhovi_pipeline.utils.load_csv
 ```
 
-This runs `load_all()`, which iterates over every entry in `CSV_FILES` and `LONG_CSV_FILES` and reads from `BASE_PATH` (the shared drive at `/mnt/yhoda_drive/...`). It will print a summary line per dataset and a total at the end. Errors for individual datasets are caught and printed without stopping the rest of the load.
+This runs `load_all()`, which iterates over every entry in `CSV_FILES` and `LONG_CSV_FILES`. It will print a summary line per dataset and a total at the end. Errors for individual datasets are caught and printed without stopping the rest of the load.
 
 ---
 

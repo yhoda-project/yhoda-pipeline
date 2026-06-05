@@ -343,7 +343,7 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "subdomain": "Net Zero",
     },
     # -----------------------------------------------------------------------
-    # Employment and Jobs — APS: economically inactive breakdown
+    # Employment and Jobs - APS: economically inactive breakdown
     # EEJPEI splits into two indicators on disk (eejpei_w / eejpei_dw).
     # -----------------------------------------------------------------------
     "eejpei_w": {
@@ -545,7 +545,7 @@ CSV_FILES: list[tuple[str, str]] = [
     ("eejpei_dw", "eejpei/eejpei_dw/eejpei_dw_preprocessed_v3.csv"),
 ]
 
-BASE_PATH = "/mnt/yhoda_drive/Shared/1_Yorkshire_Vitality_Observatory/data_preprocessing"
+_OBS_SUBDIR = "1_Yorkshire_Vitality_Observatory/data_preprocessing"
 
 
 # Long-format files: (dataset_code, relative path, lad_code_col, lad_name_col, year_col, value_col)
@@ -653,9 +653,16 @@ def load_long_dataset(
 
 def load_all() -> None:
     """Load all available preprocessed CSVs into the database."""
+    shared = get_settings().shared_drive_path
+    if not shared:
+        raise RuntimeError(
+            "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+        )
+    base_path = f"{shared}/{_OBS_SUBDIR}"
+
     total = 0
     for dataset_code, rel_path in CSV_FILES:
-        path = f"{BASE_PATH}/{rel_path}"
+        path = f"{base_path}/{rel_path}"
         print(f"Loading {dataset_code} from {path}...")
         try:
             count = load_dataset(path, dataset_code)
@@ -664,7 +671,7 @@ def load_all() -> None:
             print(f"  ERROR loading {dataset_code}: {e}")
 
     for dataset_code, rel_path, lad_code_col, lad_name_col, year_col, value_col in LONG_CSV_FILES:
-        path = f"{BASE_PATH}/{rel_path}"
+        path = f"{base_path}/{rel_path}"
         print(f"Loading {dataset_code} from {path}...")
         try:
             count = load_long_dataset(

@@ -1,4 +1,4 @@
-﻿# A Flow is Failing
+# A Flow is Failing
 
 Use this runbook if you received an ERROR email from the pipeline, or if you can see a failed flow run in the Prefect UI.
 

@@ -1,4 +1,4 @@
-﻿# Data Sources
+# Data Sources
 
 The pipeline draws from eight data sources. Three are APIs that the pipeline connects to automatically each month. The remaining five are static publications that are loaded manually when a new edition is released.
 

@@ -1,4 +1,4 @@
-﻿# YHODA Pipeline Documentation
+# YHODA Pipeline Documentation
 
 This site documents the YHODA data pipeline - the automated system that collects, validates, and stores socioeconomic, health, and environmental data for Yorkshire, powering the [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
 

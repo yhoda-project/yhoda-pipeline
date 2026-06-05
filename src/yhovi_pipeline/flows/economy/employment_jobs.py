@@ -67,7 +67,7 @@ NOMIS_ANNUAL_COLUMNS = [
 
 @flow(
     name="economy-employment-jobs",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Employment & Jobs",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Economy: Employment & Jobs",
     description="Extract employment and jobs data from NOMIS for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -80,7 +80,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
     Indicator schema, and upserts into the PostgreSQL data warehouse.
 
     Args:
-        time: Nomis time parameter — "latest" for most recent period,
+        time: Nomis time parameter - "latest" for most recent period,
             or a range like "2004-12-2024-12" for historical data.
     """
     results: list[dict[str, Any]] = []
@@ -140,14 +140,14 @@ def employment_jobs_flow(time: str = "latest") -> None:
                 results.append(
                     {
                         "Dataset": dataset_code,
-                        "Rows extracted": "—",
-                        "Rows loaded": "—",
+                        "Rows extracted": "-",
+                        "Rows loaded": "-",
                         "Status": "Failed",
                     }
                 )
                 raise
 
-        # Jobs Density (eejjd — ONS NM_57_1, pre-calculated ratio)
+        # Jobs Density (eejjd - ONS NM_57_1, pre-calculated ratio)
         dataset_code = "eejjd"
         try:
             raw_df = extract_jobs_density(time=time)
@@ -196,8 +196,8 @@ def employment_jobs_flow(time: str = "latest") -> None:
             results.append(
                 {
                     "Dataset": dataset_code,
-                    "Rows extracted": "—",
-                    "Rows loaded": "—",
+                    "Rows extracted": "-",
+                    "Rows loaded": "-",
                     "Status": "Failed",
                 }
             )

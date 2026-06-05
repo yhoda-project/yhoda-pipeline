@@ -75,7 +75,7 @@ def _post_table(payload: dict[str, Any], api_key: str) -> dict[str, Any]:
     if resp.status_code == 401:
         raise PermissionError("DWP Stat-Xplore: invalid or missing API key (HTTP 401)")
     if resp.status_code == 429:
-        raise RuntimeError("DWP Stat-Xplore: rate limit exceeded — retry later (HTTP 429)")
+        raise RuntimeError("DWP Stat-Xplore: rate limit exceeded - retry later (HTTP 429)")
     resp.raise_for_status()
     return resp.json()  # type: ignore[no-any-return]
 

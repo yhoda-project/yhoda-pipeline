@@ -1,8 +1,8 @@
 """Load the Industry dashboard CSVs into industry_business and industry_business_kpi.
 
-Sources (in /mnt/yhoda_drive/Shared/2_Yorkshire_Vitality_by_Industry/):
-  yvi_allyh_v1_6.csv          → industry_business (MSOA-level granular rows)
-  yvi_allyh_v1_6_kpis_8.csv  → industry_business_kpi (pre-aggregated KPIs)
+Sources:
+  yvi_allyh_v1_6.csv          -> industry_business (MSOA-level granular rows)
+  yvi_allyh_v1_6_kpis_8.csv  -> industry_business_kpi (pre-aggregated KPIs)
 
 Expected columns in yvi_allyh_v1_6.csv:
   Year, Industry, MSOA, Turnover, Business, MSOA11NM, msoa11hclnm, LAD23NM
@@ -36,12 +36,12 @@ from yhovi_pipeline.utils.geo_lookups import get_geo_lookup
 
 _BATCH_SIZE = 3_000  # psycopg2 limit: 65535 params; 3000 rows x 15 cols = 45000
 
-INDUSTRY_BASE = "/mnt/yhoda_drive/Shared/2_Yorkshire_Vitality_by_Industry"
-GRANULAR_CSV = f"{INDUSTRY_BASE}/yvi_allyh_v1_6.csv"
-KPI_CSV = f"{INDUSTRY_BASE}/yvi_allyh_v1_6_kpis_8.csv"
+_INDUSTRY_SUBDIR = "2_Yorkshire_Vitality_by_Industry"
+_GRANULAR_FILENAME = "yvi_allyh_v1_6.csv"
+_KPI_FILENAME = "yvi_allyh_v1_6_kpis_8.csv"
 
 # ---------------------------------------------------------------------------
-# Column mappings — update these if the CSV headers change between versions.
+# Column mappings - update these if the CSV headers change between versions.
 # key = our internal name, value = actual CSV column name.
 # ---------------------------------------------------------------------------
 
@@ -89,7 +89,7 @@ def _normalise_grouping_level(val: str) -> str:
     return str(val).strip().lower().replace(" ", "_")
 
 
-def load_industry_business(path: str = GRANULAR_CSV) -> int:
+def load_industry_business(path: str | None = None) -> int:
     """Load the MSOA-level Industry CSV into ``industry_business``.
 
     All rows are at MSOA level (no Grouping_Level column).  The MSOA column
@@ -103,6 +103,12 @@ def load_industry_business(path: str = GRANULAR_CSV) -> int:
         Number of rows upserted.
     """
     settings = get_settings()
+    if path is None:
+        if not settings.shared_drive_path:
+            raise RuntimeError(
+                "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+            )
+        path = f"{settings.shared_drive_path}/{_INDUSTRY_SUBDIR}/{_GRANULAR_FILENAME}"
     engine = create_engine(settings.database_url.get_secret_value())
 
     print(f"Reading {path}...")
@@ -169,7 +175,7 @@ def load_industry_business(path: str = GRANULAR_CSV) -> int:
     return len(records)
 
 
-def load_industry_kpi(path: str = KPI_CSV) -> int:
+def load_industry_kpi(path: str | None = None) -> int:
     """Load the pre-aggregated KPI CSV into ``industry_business_kpi``.
 
     All grouping levels (yorkshire, lad, msoa) are loaded.  Geography
@@ -183,6 +189,12 @@ def load_industry_kpi(path: str = KPI_CSV) -> int:
         Number of rows upserted.
     """
     settings = get_settings()
+    if path is None:
+        if not settings.shared_drive_path:
+            raise RuntimeError(
+                "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+            )
+        path = f"{settings.shared_drive_path}/{_INDUSTRY_SUBDIR}/{_KPI_FILENAME}"
     engine = create_engine(settings.database_url.get_secret_value())
 
     print(f"Reading {path}...")
@@ -193,7 +205,7 @@ def load_industry_kpi(path: str = KPI_CSV) -> int:
 
     now = datetime.now(UTC)
 
-    # Build MSOA code/name series — may be empty for LAD/Yorkshire rows
+    # Build MSOA code/name series - may be empty for LAD/Yorkshire rows
     msoa_col = df[c["msoa"]].fillna("").astype(str).str.strip()
     if _is_gss_code(msoa_col[msoa_col != ""]):
         lad_lookup = (
@@ -216,7 +228,7 @@ def load_industry_kpi(path: str = KPI_CSV) -> int:
         msoa_code_series = merged["msoa_code"].fillna("").astype(str)
         msoa_name_series = merged["msoa_name"].fillna("").astype(str)
     else:
-        # MSOA column is a name — use LAD name from CSV; lookup lad_code by name
+        # MSOA column is a name - use LAD name from CSV; lookup lad_code by name
         lad_name_to_code = get_geo_lookup().groupby("lad_name")["lad_code"].first()
         lad_code_series = df[c["lad_name"]].fillna("").map(lad_name_to_code).fillna("").astype(str)
         lad_name_series = df[c["lad_name"]].fillna("").astype(str)
@@ -251,7 +263,7 @@ def load_industry_kpi(path: str = KPI_CSV) -> int:
         }
     )
 
-    # Drop duplicates on the upsert key — the CSV contains duplicate rows and
+    # Drop duplicates on the upsert key - the CSV contains duplicate rows and
     # ON CONFLICT DO UPDATE cannot affect the same row twice in one statement.
     result = result.drop_duplicates(
         subset=["grouping_level", "year", "lad_code", "msoa_code", "industry", "turnover_band"],

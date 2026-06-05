@@ -1,4 +1,4 @@
-﻿# Email Alerts
+# Email Alerts
 
 The pipeline sends automatic email alerts whenever a flow fails or encounters a problem. This page explains how the system works, what the emails look like, and how to set it up.
 

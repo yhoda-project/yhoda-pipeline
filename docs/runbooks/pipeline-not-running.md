@@ -1,4 +1,4 @@
-﻿# Pipeline Has Stopped Running
+# Pipeline Has Stopped Running
 
 Use this runbook if no flows have run on their expected schedule - for example, it is the 3rd of the month and none of the 1st-of-month flows have a recent entry in the Prefect UI.
 

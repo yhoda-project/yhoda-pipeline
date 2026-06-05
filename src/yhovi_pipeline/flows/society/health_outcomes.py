@@ -95,7 +95,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
 
 @flow(
     name="society-health-outcomes",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Society: Health Outcomes",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Society: Health Outcomes",
     description="Extract NHS Fingertips health outcome indicators for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -166,8 +166,8 @@ def health_outcomes_flow() -> None:
                 results.append(
                     {
                         "Dataset": dataset_code,
-                        "Rows extracted": "—",
-                        "Rows loaded": "—",
+                        "Rows extracted": "-",
+                        "Rows loaded": "-",
                         "Status": "Failed",
                     }
                 )

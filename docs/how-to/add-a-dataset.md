@@ -1,4 +1,4 @@
-﻿# Add a New Dataset
+# Add a New Dataset
 
 This guide walks through the steps to add a new data source to the pipeline. It is written for someone who is comfortable editing Python files but may not have built a Prefect pipeline before.
 

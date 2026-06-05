@@ -48,7 +48,7 @@ NOMIS_APS_COLUMNS = [
 
 @flow(
     name="society-education-attainment",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Society: Education Attainment",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Society: Education Attainment",
     description="Extract qualification attainment data from NOMIS APS for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -118,8 +118,8 @@ def education_attainment_flow(time: str = "latestMinus1,latest") -> None:
                 results.append(
                     {
                         "Dataset": dataset_code,
-                        "Rows extracted": "—",
-                        "Rows loaded": "—",
+                        "Rows extracted": "-",
+                        "Rows loaded": "-",
                         "Status": "Failed",
                     }
                 )

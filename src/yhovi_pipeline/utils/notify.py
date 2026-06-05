@@ -65,7 +65,7 @@ def _send_alert(
     metadata: dict[str, Any] | None = None,
 ) -> None:
     if severity == Severity.INFO:
-        _logger.info("[INFO] %s — %s", flow_name, message)
+        _logger.info("[INFO] %s - %s", flow_name, message)
         return
 
     settings = get_settings()
@@ -82,7 +82,7 @@ def _send_alert(
 
     if _is_rate_limited():
         _logger.warning(
-            "Rate limit reached — suppressing [%s] alert for %s", severity.value, flow_name
+            "Rate limit reached - suppressing [%s] alert for %s", severity.value, flow_name
         )
         return
 

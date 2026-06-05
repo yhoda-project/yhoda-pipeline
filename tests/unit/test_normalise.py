@@ -585,7 +585,7 @@ class TestNormaliseFingertips:
             )
 
     def test_duplicate_key_rows_deduped_keeping_last(self) -> None:
-        """Two rows with the same (indicator_id, lad_code, reference_period) — keep last."""
+        """Two rows with the same (indicator_id, lad_code, reference_period) - keep last."""
         df = pd.concat(
             [
                 _fingertips_df(value=70.0),

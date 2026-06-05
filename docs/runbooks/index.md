@@ -1,4 +1,4 @@
-﻿# Runbooks
+# Runbooks
 
 A runbook is a step-by-step guide for a specific situation. Use this section when something has gone wrong or needs attention.
 

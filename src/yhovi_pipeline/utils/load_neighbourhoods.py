@@ -33,10 +33,8 @@ from yhovi_pipeline.config import YORKSHIRE_LAD_CODES, get_settings
 from yhovi_pipeline.db.models import Indicator
 from yhovi_pipeline.utils.geo_lookups import get_geo_lookup
 
-NEIGHBOURHOODS_CSV = (
-    "/mnt/yhoda_drive/Shared/5_Yorkshire_Vitality_Neighbourhoods/"
-    "Copy_for_Poppy1_yvn_lsoa2021_v2_1.csv"
-)
+_NEIGH_SUBDIR = "5_Yorkshire_Vitality_Neighbourhoods"
+_NEIGH_FILENAME = "Copy_for_Poppy1_yvn_lsoa2021_v2_1.csv"
 
 _BATCH_SIZE = 3_000  # psycopg2 limit: 65535 params; 3000 rows x 17 cols = 51000
 
@@ -59,7 +57,7 @@ def _parse_time(time_str: str) -> date:
     return date(int(year), int(month), int(day))
 
 
-def load_neighbourhoods(path: str = NEIGHBOURHOODS_CSV) -> int:
+def load_neighbourhoods(path: str | None = None) -> int:
     """Load the LSOA-level Neighbourhoods CSV into the ``indicator`` table.
 
     Args:
@@ -69,6 +67,12 @@ def load_neighbourhoods(path: str = NEIGHBOURHOODS_CSV) -> int:
         Number of rows upserted.
     """
     settings = get_settings()
+    if path is None:
+        if not settings.shared_drive_path:
+            raise RuntimeError(
+                "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+            )
+        path = f"{settings.shared_drive_path}/{_NEIGH_SUBDIR}/{_NEIGH_FILENAME}"
     engine = create_engine(settings.database_url.get_secret_value())
 
     print(f"Reading {path}...")

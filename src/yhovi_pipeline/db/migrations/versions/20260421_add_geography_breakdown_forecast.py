@@ -6,13 +6,13 @@ Create Date: 2026-04-21 09:00:00.000000+00:00
 
 Changes
 -------
-* ``geography_code`` / ``geography_name`` / ``geography_level`` — support for
+* ``geography_code`` / ``geography_name`` / ``geography_level`` - support for
   MSOA and LSOA data alongside the existing LAD level.  Existing rows are
   backfilled with their ``lad_code`` / ``lad_name`` values and
   ``geography_level = 'lad'``.
-* ``breakdown_category`` — sector or category label for breakdown indicators
+* ``breakdown_category`` - sector or category label for breakdown indicators
   (empty string for non-breakdown rows).
-* ``is_forecast`` / ``forecast_model`` — flag and label for Forecasting
+* ``is_forecast`` / ``forecast_model`` - flag and label for Forecasting
   dashboard values.
 * The upsert index is replaced: ``(indicator_id, lad_code, reference_period)``
   → ``(indicator_id, geography_code, reference_period, breakdown_category)``.
@@ -36,7 +36,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # ------------------------------------------------------------------
-    # Step 1 — Add breakdown_category and forecast columns.
+    # Step 1 - Add breakdown_category and forecast columns.
     # Both have server-level defaults so no explicit backfill is needed.
     # ------------------------------------------------------------------
     op.add_column(
@@ -63,7 +63,7 @@ def upgrade() -> None:
     )
 
     # ------------------------------------------------------------------
-    # Step 2 — Add geography columns as nullable initially so we can
+    # Step 2 - Add geography columns as nullable initially so we can
     # run a data migration before tightening the NOT NULL constraint.
     # ------------------------------------------------------------------
     op.add_column(
@@ -80,7 +80,7 @@ def upgrade() -> None:
     )
 
     # ------------------------------------------------------------------
-    # Step 3 — Backfill: all existing rows are LAD-level, so
+    # Step 3 - Backfill: all existing rows are LAD-level, so
     # geography_code = lad_code and geography_level = 'lad'.
     # ------------------------------------------------------------------
     op.execute(
@@ -91,14 +91,14 @@ def upgrade() -> None:
     )
 
     # ------------------------------------------------------------------
-    # Step 4 — Tighten NOT NULL now that every row is populated.
+    # Step 4 - Tighten NOT NULL now that every row is populated.
     # ------------------------------------------------------------------
     op.alter_column("indicator", "geography_code", nullable=False)
     op.alter_column("indicator", "geography_name", nullable=False)
     op.alter_column("indicator", "geography_level", nullable=False)
 
     # ------------------------------------------------------------------
-    # Step 5 — Replace the upsert index with the broader key.
+    # Step 5 - Replace the upsert index with the broader key.
     # ------------------------------------------------------------------
     op.drop_index("ix_indicator_upsert_key", table_name="indicator")
     op.create_index(
@@ -109,7 +109,7 @@ def upgrade() -> None:
     )
 
     # ------------------------------------------------------------------
-    # Step 6 — Add supporting indexes for common query patterns.
+    # Step 6 - Add supporting indexes for common query patterns.
     # ------------------------------------------------------------------
     op.create_index("ix_indicator_lad_code", "indicator", ["lad_code"], unique=False)
     op.create_index("ix_indicator_geography_level", "indicator", ["geography_level"], unique=False)

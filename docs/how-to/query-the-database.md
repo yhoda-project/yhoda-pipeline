@@ -1,4 +1,4 @@
-﻿# Query the Database
+# Query the Database
 
 This guide walks you through connecting to the YHODA staging database from your laptop using pgAdmin. You will need this whenever you want to inspect the data, run queries, or export results.
 

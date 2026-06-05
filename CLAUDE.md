@@ -12,7 +12,7 @@ YHODA (Yorkshire & Humber Office for Data Analytics) is a **Prefect v3 ETL pipel
 
 ### Background
 
-YHODA bridges a gap for Yorkshire policymakers who want data-informed decisions but lack technical infrastructure. Currently, dashboards rely on manual data collection via R scripts and CSV files — time-consuming, error-prone, and not scalable. This pipeline automates 70–80% of those workflows.
+YHODA bridges a gap for Yorkshire policymakers who want data-informed decisions but lack technical infrastructure. Currently, dashboards rely on manual data collection via R scripts and CSV files - time-consuming, error-prone, and not scalable. This pipeline automates 70–80% of those workflows.
 
 As the UK's first Regional Office for Data Analytics, YHODA aims to become a national exemplar for evidence-based regional policy.
 
@@ -20,10 +20,10 @@ As the UK's first Regional Office for Data Analytics, YHODA aims to become a nat
 
 | Target | Milestone |
 |--------|-----------|
-| Mid-Feb 2026 | Discovery & design — audit workflows, select priority datasets, draft schema |
-| End-Apr 2026 | Prototype ingestion — working API connectors for Nomis/ONS and one DWP dataset |
-| End-May 2026 | Scale-out — extend to most priority datasets, improve validation and error handling |
-| End-Jun 2026 | Handover — documentation, runbooks, training for YHODA team to maintain independently |
+| Mid-Feb 2026 | Discovery & design - audit workflows, select priority datasets, draft schema |
+| End-Apr 2026 | Prototype ingestion - working API connectors for Nomis/ONS and one DWP dataset |
+| End-May 2026 | Scale-out - extend to most priority datasets, improve validation and error handling |
+| End-Jun 2026 | Handover - documentation, runbooks, training for YHODA team to maintain independently |
 
 ### Key Constraints
 
@@ -112,12 +112,12 @@ Each source maps to a dedicated extract task in `src/yhovi_pipeline/tasks/extrac
 
 ### Key Modules
 
-- **`config.py`** — Pydantic Settings singleton. Always use `get_settings()` to access config; never read `os.environ` directly (exception: `db/migrations/env.py`). Secrets are `SecretStr` — call `.get_secret_value()` only at the call site.
-- **`utils/notify.py`** — Email alert system via Gmail SMTP. Call `send_failure_alert()`, `send_warning_alert()`, `send_success_alert()` from flow except blocks. INFO severity logs only. Built-in deduplication (30 min window) and rate limiting (10/min).
-- **`db/models.py`** — SQLAlchemy 2.0 ORM with three tables: `Indicator` (fact), `DatasetMetadata` (audit/run history), `GeoLookup` (LSOA→MSOA→LAD→Region dimension).
-- **`tasks/transform/`** — `validate.py` (schema & LAD validation), `normalise.py` (canonical Indicator shape), `geo.py` (geography aggregation).
-- **`tasks/load/database.py`** — Upserts indicators and writes run metadata.
-- **`utils/geo_lookups.py`** — LRU-cached ONS geography lookup; `lsoa_to_lad()` for aggregation.
+- **`config.py`** - Pydantic Settings singleton. Always use `get_settings()` to access config; never read `os.environ` directly (exception: `db/migrations/env.py`). Secrets are `SecretStr` - call `.get_secret_value()` only at the call site.
+- **`utils/notify.py`** - Email alert system via Gmail SMTP. Call `send_failure_alert()`, `send_warning_alert()`, `send_success_alert()` from flow except blocks. INFO severity logs only. Built-in deduplication (30 min window) and rate limiting (10/min).
+- **`db/models.py`** - SQLAlchemy 2.0 ORM with three tables: `Indicator` (fact), `DatasetMetadata` (audit/run history), `GeoLookup` (LSOA→MSOA→LAD→Region dimension).
+- **`tasks/transform/`** - `validate.py` (schema & LAD validation), `normalise.py` (canonical Indicator shape), `geo.py` (geography aggregation).
+- **`tasks/load/database.py`** - Upserts indicators and writes run metadata.
+- **`utils/geo_lookups.py`** - LRU-cached ONS geography lookup; `lsoa_to_lad()` for aggregation.
 
 ### Flow/Task Conventions
 

@@ -26,7 +26,7 @@ BASE_URL = "https://fingertips.phe.org.uk/api"
 # Fingertips area type ID for Local Authority Districts (2019 boundaries).
 LAD_AREA_TYPE_ID = 402
 
-# ONS GSS code for England — used as the parent area when fetching all LADs.
+# ONS GSS code for England - used as the parent area when fetching all LADs.
 ENGLAND_PARENT_CODE = "E92000001"
 
 # Minimum columns the Fingertips CSV must contain for downstream tasks.

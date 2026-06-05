@@ -24,7 +24,7 @@ from yhovi_pipeline.utils.notify import send_failure_alert
 
 @dataclass
 class _DatasetConfig:
-    extract_fn: Any  # Prefect Task — Any avoids callable-overload complications
+    extract_fn: Any  # Prefect Task - Any avoids callable-overload complications
     dataset_code: str
     indicator_id: str
     indicator_name: str
@@ -54,7 +54,7 @@ _DATASETS = [
 
 @flow(
     name="economy-claimant-count",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Claimant Count",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Economy: Claimant Count",
     description="Extract DWP claimant count data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -115,8 +115,8 @@ def claimant_count_flow() -> None:
             results.append(
                 {
                     "Dataset": ds.dataset_code,
-                    "Rows extracted": "—",
-                    "Rows loaded": "—",
+                    "Rows extracted": "-",
+                    "Rows loaded": "-",
                     "Status": "Failed",
                 }
             )

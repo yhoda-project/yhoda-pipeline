@@ -1,4 +1,4 @@
-﻿# Data Looks Wrong
+# Data Looks Wrong
 
 Use this runbook if a figure in the Yorkshire Vitality Suite dashboards looks incorrect, is missing, or appears not to have been updated.
 

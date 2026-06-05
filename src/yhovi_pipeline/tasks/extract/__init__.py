@@ -1,1 +1,1 @@
-"""Extract tasks — one module per upstream data source."""
+"""Extract tasks - one module per upstream data source."""

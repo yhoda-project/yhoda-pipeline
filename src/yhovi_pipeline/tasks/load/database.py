@@ -170,7 +170,7 @@ def query_population() -> pd.DataFrame:
     df = pd.DataFrame(rows, columns=["lad_code", "year", "population"])
 
     if df.empty:
-        logger.warning("No population data found — load SDPOP before running DWP flows")
+        logger.warning("No population data found - load SDPOP before running DWP flows")
     else:
         logger.info("Loaded population for %d LAD-year combinations", len(df))
 

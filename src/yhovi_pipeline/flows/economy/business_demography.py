@@ -16,7 +16,7 @@ from prefect.task_runners import ThreadPoolTaskRunner
 
 @flow(
     name="economy-business-demography",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Business Demography",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Economy: Business Demography",
     description="Extract ONS business demography data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -40,6 +40,6 @@ def business_demography_flow() -> None:
     )
     create_markdown_artifact(
         key="run-summary",
-        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        markdown="Static release - no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
         description="Run summary",
     )

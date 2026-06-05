@@ -367,16 +367,14 @@ class TestFullRefreshFlow:
             "health_outcomes_flow",
             "education_attainment_flow",
             "housing_tenure_flow",
-            "deprivation_imd_flow",
             "crime_statistics_flow",
             "physical_activity_flow",
             "digital_inclusion_flow",
-            "air_quality_flow",
             "energy_consumption_flow",
         ]
         return [patch(f"{self._mod}.{name}") for name in names]
 
-    def test_all_fourteen_flows_called(self) -> None:
+    def test_all_twelve_flows_called(self) -> None:
         patches = self._all_flow_patches()
         mocks = [p.start() for p in patches]
         try:
