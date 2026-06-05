@@ -513,7 +513,7 @@ CSV_FILES: list[tuple[str, str]] = [
     ("ewrkg", "ewrkg/ewrkg_preprocessing_v1_7.csv"),
     ("ewrr", "ewrr/ewrr_preprocessing_v1_7.csv"),
     ("scasla", "scasla/scasla_preprocessing_v1_1.csv"),
-    ("scpna", "scpna/scpna_preprocessing_v1_1.csv"),
+    ("scpna", "scpna/scpna_preprocessing_v1_4.csv"),
     ("shohar", "shohar/shohar_preprocessed_v1_1.csv"),
     ("shoahc", "shoahc/shoahc_preprocessing_v1_2.csv"),
     ("shohwl", "shohwl/shohwl_preprocessing_v1_2.csv"),
