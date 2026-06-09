@@ -141,6 +141,9 @@ class Indicator(Base):
     dataset_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     """Dataset / series code within the source system."""
 
+    subdomain: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    """Dashboard subdomain grouping, e.g. ``"Employment and Jobs"``."""
+
     # --- Breakdown dimension -----------------------------------------------
 
     breakdown_category: Mapped[str] = mapped_column(
