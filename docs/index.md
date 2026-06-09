@@ -24,6 +24,12 @@ You do not need to be a software developer, but familiarity with the project and
 
 ---
 
+## Got a question?
+
+[Ask DeepWiki](https://deepwiki.com/yhoda-project/yhoda-pipeline) — an AI assistant trained on this repository that can answer questions about how the pipeline works, where to find things, and how components fit together.
+
+---
+
 ## How these docs are structured
 
 | Section | What's in it |

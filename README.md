@@ -7,6 +7,7 @@
 [![Prefect](https://img.shields.io/badge/prefect-v3-blue)](https://www.prefect.io/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/yhoda-project/yhoda-pipeline)
 
 An automated end-to-end Prefect v3 ETL pipeline that ingests, transforms, and warehouses socioeconomic, health, and environmental indicators for Yorkshire into PostgreSQL, powering the [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
 
