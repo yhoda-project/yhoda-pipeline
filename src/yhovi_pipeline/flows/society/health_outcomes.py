@@ -57,6 +57,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
         "gender_filter": "Persons",
         "age_filter": "10+ yrs",
         "unit": "per 100k",
+        "subdomain": "Health",
     },
     "sheleb_m": {
         "fingertips_id": 90366,
@@ -65,6 +66,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
         "gender_filter": "Male",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
     "sheleb_f": {
         "fingertips_id": 90366,
@@ -73,6 +75,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
         "gender_filter": "Female",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
     "shehle_m": {
         "fingertips_id": 90362,
@@ -81,6 +84,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
         "gender_filter": "Male",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
     "shehle_f": {
         "fingertips_id": 90362,
@@ -89,6 +93,7 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
         "gender_filter": "Female",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
 }
 
@@ -134,6 +139,7 @@ def health_outcomes_flow() -> None:
                     gender_filter=meta["gender_filter"],
                     age_filter=meta["age_filter"],
                     unit=meta["unit"],
+                    subdomain=meta["subdomain"],
                 )
 
                 rows_loaded = upsert_indicators(df=indicator_df, dataset_code=dataset_code)

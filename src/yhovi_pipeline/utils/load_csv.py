@@ -252,6 +252,20 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "source": "dluhc",
         "subdomain": "Housing",
     },
+    "ebebnb": {
+        "indicator_id": "new_business_count",
+        "indicator_name": "Number of New Business",
+        "unit": "count",
+        "source": "ons",
+        "subdomain": "Business and Economy",
+    },
+    "ebebdb": {
+        "indicator_id": "business_deaths_count",
+        "indicator_name": "Deaths of Businesses",
+        "unit": "count",
+        "source": "ons",
+        "subdomain": "Business and Economy",
+    },
     "ebebcr": {
         "indicator_id": "business_churn_rate_per_100k",
         "indicator_name": "Business Churn Rate per 100,000 inhabitants",
@@ -537,6 +551,8 @@ _OBS_SUBDIR = "1_Yorkshire_Vitality_Observatory/data_preprocessing"
 
 # Long-format files: (dataset_code, relative path, lad_code_col, lad_name_col, year_col, value_col)
 LONG_CSV_FILES: list[tuple[str, str, str, str, str, str]] = [
+    ("ebebnb", "ebebcr/ebebcr_preprocessed_v2.csv", "LAD23CD", "LocalAuthority", "Year", "Births"),
+    ("ebebdb", "ebebcr/ebebcr_preprocessed_v2.csv", "LAD23CD", "LocalAuthority", "Year", "Deaths"),
     (
         "ebebcr",
         "ebebcr/ebebcr_preprocessed_v2.csv",

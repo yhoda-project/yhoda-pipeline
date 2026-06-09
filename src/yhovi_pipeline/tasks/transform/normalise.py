@@ -128,6 +128,7 @@ def normalise_nomis_aps(
     indicator_name: str,
     dataset_code: str,
     unit: str = "%",
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform a Nomis APS API response into the Indicator schema.
 
@@ -163,6 +164,7 @@ def normalise_nomis_aps(
             "unit": unit,
             "source": "nomis",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -237,6 +239,7 @@ def normalise_nomis_annual(
     indicator_name: str,
     dataset_code: str,
     unit: str | None = None,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform a 4-column annual Nomis response into the Indicator schema.
 
@@ -274,6 +277,7 @@ def normalise_nomis_annual(
             "unit": unit,
             "source": "nomis",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -359,6 +363,7 @@ def normalise_fingertips(
     gender_filter: str,
     age_filter: str,
     unit: str | None = None,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform a Fingertips API response into the canonical Indicator schema.
 
@@ -423,6 +428,7 @@ def normalise_fingertips(
             "unit": unit,
             "source": "fingertips",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -496,6 +502,7 @@ def normalise_dwp(
     dataset_code: str,
     rate_per: int,
     unit: str,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform DWP count data into the Indicator schema as a per-capita rate.
 
@@ -562,6 +569,7 @@ def normalise_dwp(
             "unit": unit,
             "source": "dwp",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,

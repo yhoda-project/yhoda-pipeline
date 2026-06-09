@@ -78,6 +78,7 @@ def upsert_indicators(df: pd.DataFrame, dataset_code: str) -> int:
             "unit": stmt.excluded.unit,
             "source": stmt.excluded.source,
             "dataset_code": stmt.excluded.dataset_code,
+            "subdomain": stmt.excluded.subdomain,
             "is_forecast": stmt.excluded.is_forecast,
             "forecast_model": stmt.excluded.forecast_model,
             "updated_at": stmt.excluded.updated_at,

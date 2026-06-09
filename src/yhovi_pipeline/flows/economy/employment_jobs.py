@@ -27,24 +27,28 @@ APS_DATASETS: dict[str, dict[str, str]] = {
         "indicator_name": "Employment rate",
         "dataset_code": "eejer",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
     "unemployment_rate": {
         "indicator_id": "unemployment_rate",
         "indicator_name": "Unemployment rate",
         "dataset_code": "eejur",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
     "self_employment_rate": {
         "indicator_id": "self_employment_rate",
         "indicator_name": "Self-employment rate",
         "dataset_code": "eejse",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
     "econ_inactive_rate": {
         "indicator_id": "economic_inactivity_rate",
         "indicator_name": "Percentage who are economically inactive - aged 16-64",
         "dataset_code": "eejeir",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
 }
 
@@ -106,6 +110,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
                     indicator_name=meta["indicator_name"],
                     dataset_code=dataset_code,
                     unit=meta["unit"],
+                    subdomain=meta["subdomain"],
                 )
 
                 # Load
@@ -164,6 +169,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
                 indicator_name="Number of Jobs per Working-Age Resident (16-64)",
                 dataset_code=dataset_code,
                 unit="ratio",
+                subdomain="Employment and Jobs",
             )
 
             rows_loaded = upsert_indicators(df=indicator_df, dataset_code=dataset_code)

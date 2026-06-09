@@ -30,6 +30,7 @@ class _DatasetConfig:
     indicator_name: str
     rate_per: int
     unit: str
+    subdomain: str
 
 
 _DATASETS = [
@@ -40,6 +41,7 @@ _DATASETS = [
         indicator_name="Number of children in relative low income households per 10,000 inhabitants",
         rate_per=10_000,
         unit="per 10k",
+        subdomain="Earnings and Income",
     ),
     _DatasetConfig(
         extract_fn=extract_pip_claimants,
@@ -48,6 +50,7 @@ _DATASETS = [
         indicator_name="Number of People with Disability Benefits per 100,000 Residents",
         rate_per=100_000,
         unit="per 100k",
+        subdomain="Employment and Jobs",
     ),
 ]
 
@@ -84,6 +87,7 @@ def claimant_count_flow() -> None:
                 dataset_code=ds.dataset_code,
                 rate_per=ds.rate_per,
                 unit=ds.unit,
+                subdomain=ds.subdomain,
             )
 
             rows_loaded = upsert_indicators(df=indicator_df, dataset_code=ds.dataset_code)
