@@ -327,3 +327,14 @@ class TestLoadAll:
             load_all()
         failed_calls = [c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.FAILED]
         assert len(failed_calls) > 0
+
+    def test_writes_metadata_on_long_dataset_failure(self, test_settings) -> None:
+        with (
+            patch(f"{self._mod}.load_dataset", return_value=10),
+            patch(f"{self._mod}.load_long_dataset", side_effect=Exception("long fail")),
+            patch(f"{self._mod}._write_csv_metadata") as mock_meta,
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
+        ):
+            load_all()
+        failed_calls = [c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.FAILED]
+        assert len(failed_calls) > 0
