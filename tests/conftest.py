@@ -34,6 +34,7 @@ def test_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     )
     monkeypatch.setenv("DWP_API_KEY", "test-dwp-key")
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
+    monkeypatch.setenv("SHARED_DRIVE_PATH", "/tmp/test-shared-drive")
 
     settings = get_settings()
 
