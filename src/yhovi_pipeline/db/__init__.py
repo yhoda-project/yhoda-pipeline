@@ -1,1 +1,1 @@
-"""Database package — ORM models, migrations, and session helpers."""
+"""Database package - ORM models, migrations, and session helpers."""

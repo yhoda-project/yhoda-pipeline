@@ -15,7 +15,7 @@ from prefect.task_runners import ThreadPoolTaskRunner
 
 @flow(
     name="society-crime-statistics",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Society: Crime Statistics",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Society: Crime Statistics",
     description="Extract Home Office recorded crime statistics for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -39,6 +39,6 @@ def crime_statistics_flow() -> None:
     )
     create_markdown_artifact(
         key="run-summary",
-        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        markdown="Static release - no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
         description="Run summary",
     )

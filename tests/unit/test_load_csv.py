@@ -8,9 +8,11 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
+from yhovi_pipeline.db.models import ExtractionStatus
 from yhovi_pipeline.utils.load_csv import (
     DATASET_REGISTRY,
     _extract_year,
+    _write_csv_metadata,
     load_all,
     load_dataset,
     load_long_dataset,
@@ -146,6 +148,7 @@ class TestWideToLong:
             assert "indicator_name" in DATASET_REGISTRY[code]
             assert "unit" in DATASET_REGISTRY[code]
             assert "source" in DATASET_REGISTRY[code]
+            assert "subdomain" in DATASET_REGISTRY[code]
 
 
 def _mock_engine() -> MagicMock:
@@ -214,26 +217,124 @@ class TestLoadLongDataset:
         assert result == 0
 
 
+def _mock_session() -> MagicMock:
+    session = MagicMock()
+    session.__enter__ = MagicMock(return_value=session)
+    session.__exit__ = MagicMock(return_value=False)
+    return session
+
+
+class TestWriteCsvMetadata:
+    _mod = "yhovi_pipeline.utils.load_csv"
+
+    def test_commits_success_record(self) -> None:
+        session = _mock_session()
+        with patch(f"{self._mod}.Session", return_value=session):
+            _write_csv_metadata(MagicMock(), "eejer", ExtractionStatus.SUCCESS, rows_loaded=10)
+        session.add.assert_called_once()
+        session.commit.assert_called_once()
+
+    def test_success_record_has_correct_status(self) -> None:
+        session = _mock_session()
+        with patch(f"{self._mod}.Session", return_value=session):
+            _write_csv_metadata(MagicMock(), "eejer", ExtractionStatus.SUCCESS, rows_loaded=10)
+        record = session.add.call_args[0][0]
+        assert record.extraction_status == ExtractionStatus.SUCCESS
+
+    def test_success_record_has_rows_loaded(self) -> None:
+        session = _mock_session()
+        with patch(f"{self._mod}.Session", return_value=session):
+            _write_csv_metadata(MagicMock(), "eejer", ExtractionStatus.SUCCESS, rows_loaded=10)
+        record = session.add.call_args[0][0]
+        assert record.rows_loaded == 10
+
+    def test_failure_record_has_error_message(self) -> None:
+        session = _mock_session()
+        with patch(f"{self._mod}.Session", return_value=session):
+            _write_csv_metadata(
+                MagicMock(), "eejer", ExtractionStatus.FAILED, error_message="file not found"
+            )
+        record = session.add.call_args[0][0]
+        assert record.error_message == "file not found"
+
+    def test_failure_record_has_no_extracted_at(self) -> None:
+        session = _mock_session()
+        with patch(f"{self._mod}.Session", return_value=session):
+            _write_csv_metadata(MagicMock(), "eejer", ExtractionStatus.FAILED)
+        record = session.add.call_args[0][0]
+        assert record.extracted_at is None
+
+    def test_source_taken_from_registry(self) -> None:
+        session = _mock_session()
+        with patch(f"{self._mod}.Session", return_value=session):
+            _write_csv_metadata(MagicMock(), "eejer", ExtractionStatus.SUCCESS, rows_loaded=1)
+        record = session.add.call_args[0][0]
+        assert record.source == "nomis"
+
+
 class TestLoadAll:
+    _mod = "yhovi_pipeline.utils.load_csv"
+
     def test_calls_load_dataset_for_each_wide_file(self, test_settings) -> None:
         with (
-            patch("yhovi_pipeline.utils.load_csv.load_dataset", return_value=10) as mock_wide,
-            patch("yhovi_pipeline.utils.load_csv.load_long_dataset", return_value=5),
+            patch(f"{self._mod}.load_dataset", return_value=10) as mock_wide,
+            patch(f"{self._mod}.load_long_dataset", return_value=5),
+            patch(f"{self._mod}._write_csv_metadata"),
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
             load_all()
         assert mock_wide.call_count > 0
 
     def test_calls_load_long_dataset_for_long_files(self, test_settings) -> None:
         with (
-            patch("yhovi_pipeline.utils.load_csv.load_dataset", return_value=10),
-            patch("yhovi_pipeline.utils.load_csv.load_long_dataset", return_value=5) as mock_long,
+            patch(f"{self._mod}.load_dataset", return_value=10),
+            patch(f"{self._mod}.load_long_dataset", return_value=5) as mock_long,
+            patch(f"{self._mod}._write_csv_metadata"),
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
             load_all()
         assert mock_long.call_count > 0
 
     def test_continues_on_error(self, test_settings) -> None:
         with (
-            patch("yhovi_pipeline.utils.load_csv.load_dataset", side_effect=Exception("fail")),
-            patch("yhovi_pipeline.utils.load_csv.load_long_dataset", return_value=0),
+            patch(f"{self._mod}.load_dataset", side_effect=Exception("fail")),
+            patch(f"{self._mod}.load_long_dataset", return_value=0),
+            patch(f"{self._mod}._write_csv_metadata"),
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
             load_all()  # must not raise
+
+    def test_writes_metadata_on_success(self, test_settings) -> None:
+        with (
+            patch(f"{self._mod}.load_dataset", return_value=10),
+            patch(f"{self._mod}.load_long_dataset", return_value=5),
+            patch(f"{self._mod}._write_csv_metadata") as mock_meta,
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
+        ):
+            load_all()
+        success_calls = [
+            c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.SUCCESS
+        ]
+        assert len(success_calls) > 0
+
+    def test_writes_metadata_on_failure(self, test_settings) -> None:
+        with (
+            patch(f"{self._mod}.load_dataset", side_effect=Exception("boom")),
+            patch(f"{self._mod}.load_long_dataset", return_value=0),
+            patch(f"{self._mod}._write_csv_metadata") as mock_meta,
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
+        ):
+            load_all()
+        failed_calls = [c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.FAILED]
+        assert len(failed_calls) > 0
+
+    def test_writes_metadata_on_long_dataset_failure(self, test_settings) -> None:
+        with (
+            patch(f"{self._mod}.load_dataset", return_value=10),
+            patch(f"{self._mod}.load_long_dataset", side_effect=Exception("long fail")),
+            patch(f"{self._mod}._write_csv_metadata") as mock_meta,
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
+        ):
+            load_all()
+        failed_calls = [c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.FAILED]
+        assert len(failed_calls) > 0

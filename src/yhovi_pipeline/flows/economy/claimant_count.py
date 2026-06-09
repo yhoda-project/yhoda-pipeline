@@ -24,12 +24,13 @@ from yhovi_pipeline.utils.notify import send_failure_alert
 
 @dataclass
 class _DatasetConfig:
-    extract_fn: Any  # Prefect Task — Any avoids callable-overload complications
+    extract_fn: Any  # Prefect Task - Any avoids callable-overload complications
     dataset_code: str
     indicator_id: str
     indicator_name: str
     rate_per: int
     unit: str
+    subdomain: str
 
 
 _DATASETS = [
@@ -37,24 +38,26 @@ _DATASETS = [
         extract_fn=extract_children_low_income,
         dataset_code="eeicli",
         indicator_id="children_low_income_per_10k",
-        indicator_name="Children in relative low income households per 10,000",
+        indicator_name="Number of children in relative low income households per 10,000 inhabitants",
         rate_per=10_000,
         unit="per 10k",
+        subdomain="Earnings and Income",
     ),
     _DatasetConfig(
         extract_fn=extract_pip_claimants,
         dataset_code="eejpip",
         indicator_id="disability_benefits_per_100k",
-        indicator_name="Number of people with disability benefits (PIP) per 100,000 residents",
+        indicator_name="Number of People with Disability Benefits per 100,000 Residents",
         rate_per=100_000,
         unit="per 100k",
+        subdomain="Employment and Jobs",
     ),
 ]
 
 
 @flow(
     name="economy-claimant-count",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Claimant Count",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Economy: Claimant Count",
     description="Extract DWP claimant count data for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -84,6 +87,7 @@ def claimant_count_flow() -> None:
                 dataset_code=ds.dataset_code,
                 rate_per=ds.rate_per,
                 unit=ds.unit,
+                subdomain=ds.subdomain,
             )
 
             rows_loaded = upsert_indicators(df=indicator_df, dataset_code=ds.dataset_code)
@@ -115,8 +119,8 @@ def claimant_count_flow() -> None:
             results.append(
                 {
                     "Dataset": ds.dataset_code,
-                    "Rows extracted": "—",
-                    "Rows loaded": "—",
+                    "Rows extracted": "-",
+                    "Rows loaded": "-",
                     "Status": "Failed",
                 }
             )

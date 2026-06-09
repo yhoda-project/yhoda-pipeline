@@ -71,5 +71,5 @@ uv run prefect deploy --all --no-prompt
 
 ## Secrets required
 
-The workflow uses the built-in `GITHUB_TOKEN` — no additional secrets are needed for the
+The workflow uses the built-in `GITHUB_TOKEN` - no additional secrets are needed for the
 release automation itself.

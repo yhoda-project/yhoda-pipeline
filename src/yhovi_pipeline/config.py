@@ -1,7 +1,7 @@
 """Pipeline-wide configuration via pydantic-settings v2.
 
 Settings are loaded from environment variables (and optionally a `.env` file).
-Use `get_settings()` to obtain the singleton instance — it is cached after the
+Use `get_settings()` to obtain the singleton instance - it is cached after the
 first call so the environment is only parsed once per process.
 """
 
@@ -40,7 +40,7 @@ YORKSHIRE_LAD_CODES: list[str] = [
     "E06000012",  # North East Lincolnshire
     "E06000013",  # North Lincolnshire
     # Remaining districts in the Humber sub-region / wider Yorkshire
-    # (ceremonial county of Yorkshire — included for completeness)
+    # (ceremonial county of Yorkshire - included for completeness)
     "E07000163",  # Craven
     "E07000164",  # Hambleton
     "E07000165",  # Harrogate
@@ -61,7 +61,7 @@ class Settings(BaseSettings):
 
     All fields can be overridden by setting the corresponding environment
     variable (case-insensitive).  A `.env` file is also read automatically
-    when present — useful for local development.
+    when present - useful for local development.
     """
 
     model_config = SettingsConfigDict(
@@ -80,7 +80,7 @@ class Settings(BaseSettings):
 
     # API keys ---------------------------------------------------------------
     nomis_api_key: SecretStr | None = None
-    """NOMIS (ONS Labour Market Statistics) API key.  Optional — public
+    """NOMIS (ONS Labour Market Statistics) API key.  Optional - public
     endpoints work without a key but are rate-limited."""
 
     dwp_api_key: SecretStr
@@ -98,7 +98,7 @@ class Settings(BaseSettings):
     """Google App Password for the alert sender account."""
 
     alert_group_email: str | None = None
-    """Recipient address for pipeline alerts — single address or comma-separated list."""
+    """Recipient address for pipeline alerts - single address or comma-separated list."""
 
     alert_success_enabled: bool = False
     """Set to true to receive an email on every successful flow run."""
@@ -106,6 +106,17 @@ class Settings(BaseSettings):
     # Logging ----------------------------------------------------------------
     log_level: str = "INFO"
     """Python logging level string (DEBUG, INFO, WARNING, ERROR)."""
+
+    # Data paths -------------------------------------------------------------
+    shared_drive_path: str | None = None
+    """Absolute path to the root of the YHODA shared drive on the VM.
+
+    Required when running any of the manual CSV loaders (load_csv,
+    load_industry, load_jobs, load_neighbourhoods, seed_geo_lookup).
+
+    Example (VM default):
+        /mnt/yhoda_drive/Shared
+    """
 
     # Geography --------------------------------------------------------------
     yorkshire_lad_codes: list[str] = YORKSHIRE_LAD_CODES

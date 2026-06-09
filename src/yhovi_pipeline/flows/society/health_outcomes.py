@@ -53,49 +53,54 @@ HEALTH_DATASETS: dict[str, dict[str, Any]] = {
     "sheu75": {
         "fingertips_id": 41001,
         "indicator_id": "under75_preventable_mortality_rate",
-        "indicator_name": "Under 75 mortality rate from preventable causes (per 100,000)",
+        "indicator_name": "Deaths under 75 from preventable causes (per 100,000)",
         "gender_filter": "Persons",
         "age_filter": "10+ yrs",
         "unit": "per 100k",
+        "subdomain": "Health",
     },
     "sheleb_m": {
         "fingertips_id": 90366,
         "indicator_id": "male_life_expectancy",
-        "indicator_name": "Male life expectancy at birth (years)",
+        "indicator_name": "Male life expectancy (years)",
         "gender_filter": "Male",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
     "sheleb_f": {
         "fingertips_id": 90366,
         "indicator_id": "female_life_expectancy",
-        "indicator_name": "Female life expectancy at birth (years)",
+        "indicator_name": "Female life expectancy (years)",
         "gender_filter": "Female",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
     "shehle_m": {
         "fingertips_id": 90362,
         "indicator_id": "male_healthy_life_expectancy",
-        "indicator_name": "Male healthy life expectancy at birth (years)",
+        "indicator_name": "Male healthy life expectancy (years)",
         "gender_filter": "Male",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
     "shehle_f": {
         "fingertips_id": 90362,
         "indicator_id": "female_healthy_life_expectancy",
-        "indicator_name": "Female healthy life expectancy at birth (years)",
+        "indicator_name": "Female healthy life expectancy (years)",
         "gender_filter": "Female",
         "age_filter": "All ages",
         "unit": "years",
+        "subdomain": "Health",
     },
 }
 
 
 @flow(
     name="society-health-outcomes",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Society: Health Outcomes",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Society: Health Outcomes",
     description="Extract NHS Fingertips health outcome indicators for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -134,6 +139,7 @@ def health_outcomes_flow() -> None:
                     gender_filter=meta["gender_filter"],
                     age_filter=meta["age_filter"],
                     unit=meta["unit"],
+                    subdomain=meta["subdomain"],
                 )
 
                 rows_loaded = upsert_indicators(df=indicator_df, dataset_code=dataset_code)
@@ -166,8 +172,8 @@ def health_outcomes_flow() -> None:
                 results.append(
                     {
                         "Dataset": dataset_code,
-                        "Rows extracted": "—",
-                        "Rows loaded": "—",
+                        "Rows extracted": "-",
+                        "Rows loaded": "-",
                         "Status": "Failed",
                     }
                 )

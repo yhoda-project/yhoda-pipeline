@@ -24,10 +24,11 @@ from yhovi_pipeline.db.models import JobsLsoa
 
 _BATCH_SIZE = 3_000  # psycopg2 limit: 65535 params; 3000 rows x 15 cols = 45000
 
-JOBS_CSV = "/mnt/yhoda_drive/Shared/3_Yorkshire_Vitality_Jobs/yvj_jps_yorkshireandhumber_v1_8.csv"
+_JOBS_SUBDIR = "3_Yorkshire_Vitality_Jobs"
+_JOBS_FILENAME = "yvj_jps_yorkshireandhumber_v1_8.csv"
 
 
-def load_jobs(path: str = JOBS_CSV) -> int:
+def load_jobs(path: str | None = None) -> int:
     """Load the LSOA-level Jobs CSV into the ``jobs_lsoa`` table.
 
     Filters to Yorkshire LADs, then upserts on ``(lsoa_code, year, sic_code)``.
@@ -39,6 +40,12 @@ def load_jobs(path: str = JOBS_CSV) -> int:
         Number of rows upserted.
     """
     settings = get_settings()
+    if path is None:
+        if not settings.shared_drive_path:
+            raise RuntimeError(
+                "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+            )
+        path = f"{settings.shared_drive_path}/{_JOBS_SUBDIR}/{_JOBS_FILENAME}"
     engine = create_engine(settings.database_url.get_secret_value())
 
     print(f"Reading {path}...")

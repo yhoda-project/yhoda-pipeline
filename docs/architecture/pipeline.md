@@ -1,4 +1,4 @@
-﻿# Pipeline
+# Pipeline
 
 The pipeline is built with [Prefect](https://www.prefect.io/), a workflow orchestration tool. Prefect handles scheduling, retries, logging, and provides the UI where you can monitor every run.
 

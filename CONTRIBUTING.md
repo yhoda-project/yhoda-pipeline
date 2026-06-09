@@ -9,7 +9,7 @@ Please read this guide before opening a PR.
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Production — protected; all changes via PR |
+| `main` | Production - protected; all changes via PR |
 | `feature/<ticket>-<slug>` | New functionality |
 | `fix/<ticket>-<slug>` | Bug fixes |
 | `chore/<slug>` | Non-functional changes (deps, docs, CI) |
@@ -131,7 +131,7 @@ Before opening a pull request, confirm that:
 
 - Use `@flow(name="<domain>/<slug>", retries=1, task_runner=ThreadPoolTaskRunner(max_workers=4))`
 - Flow names must match the `name:` key in `prefect.yaml`
-- Flows orchestrate tasks — business logic lives in tasks
+- Flows orchestrate tasks - business logic lives in tasks
 
 ### Tasks
 
@@ -141,21 +141,21 @@ Before opening a pull request, confirm that:
 
 ### Settings
 
-- Always access configuration via `get_settings()` — never read `os.environ` directly in
+- Always access configuration via `get_settings()` - never read `os.environ` directly in
   flows or tasks
 - Exception: `db/migrations/env.py` reads env vars directly to avoid requiring API keys
   for migrations
 
 ### Secrets
 
-- All secrets are `pydantic.SecretStr` — call `.get_secret_value()` only at the call site
+- All secrets are `pydantic.SecretStr` - call `.get_secret_value()` only at the call site
 - Never log secret values
 
 ---
 
 ## Releases
 
-Releases are automated via release-please and Conventional Commits — no manual version bumping
+Releases are automated via release-please and Conventional Commits - no manual version bumping
 is needed. See [RELEASING.md](RELEASING.md) for the full workflow.
 
 ---

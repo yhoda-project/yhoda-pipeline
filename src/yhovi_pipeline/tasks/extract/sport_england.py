@@ -25,5 +25,8 @@ def extract_active_lives(survey_year: str) -> pd.DataFrame:
     Returns:
         DataFrame with physical activity rates for Yorkshire LADs.
     """
-    # TODO: implement — download from Sport England open data portal
-    raise NotImplementedError("extract_active_lives not yet implemented")
+    raise NotImplementedError(
+        "No automated extract available. Sport England Active Lives data is only "
+        "accessible through an interactive portal with no download API. Load manually "
+        "via load_csv.py."
+    )

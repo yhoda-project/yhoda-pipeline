@@ -105,7 +105,7 @@ def extract_aps(
 
     Args:
         variable: Key into APS_VARIABLES, e.g. "employment_rate".
-        time: Time parameter — "latest", a specific period like "2023-12",
+        time: Time parameter - "latest", a specific period like "2023-12",
             or a range like "2004-12-2024-12".
 
     Returns:
@@ -157,7 +157,7 @@ def extract_ashe(time: str = "latest") -> pd.DataFrame:
     (total: all genders, full and part time combined).
 
     Args:
-        time: Time parameter — "latest" for most recent year, or a range
+        time: Time parameter - "latest" for most recent year, or a range
             like "2010,2011,2012,...,2024" for historical data.
 
     Returns:
@@ -202,7 +202,7 @@ def extract_jobs_density(time: str = "latest") -> pd.DataFrame:
     pre-calculated ratio; item 1 would return the raw jobs count.
 
     Args:
-        time: Time parameter — "latest" for most recent year, or a range
+        time: Time parameter - "latest" for most recent year, or a range
             like "2010,2011,...,2023" for historical data.
 
     Returns:

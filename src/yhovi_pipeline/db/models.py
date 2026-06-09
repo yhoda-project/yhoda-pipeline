@@ -9,7 +9,7 @@ Design notes
 * All ``Enum`` columns use ``native_enum=False`` to keep the schema portable
   across database backends.
 * The ``Indicator`` table has a unique index on ``(indicator_id, lad_code,
-  reference_period)`` — this triple is the upsert key used by load tasks.
+  reference_period)`` - this triple is the upsert key used by load tasks.
 * ``GeoLookup`` maps LSOA codes → MSOA → LAD → Region, matching the ONS
   December 2021 geography release used throughout the project.
 """
@@ -34,7 +34,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # ---------------------------------------------------------------------------
-# Naming convention — ensures Alembic generates deterministic constraint names
+# Naming convention - ensures Alembic generates deterministic constraint names
 # (explicit names are required for reliable autogenerate on all backends).
 # ---------------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ NAMING_CONVENTION: dict[str, str] = {
 
 
 class Base(DeclarativeBase):
-    """Shared declarative base — all ORM models inherit from this."""
+    """Shared declarative base - all ORM models inherit from this."""
 
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
@@ -82,9 +82,9 @@ class Indicator(Base):
 
     Geography levels
     ----------------
-    ``lad``  — Local Authority District (the original and primary level).
-    ``msoa`` — Middle Super Output Area (Industry / Jobs dashboards).
-    ``lsoa`` — Lower Super Output Area (Neighbourhoods dashboard).
+    ``lad``  - Local Authority District (the original and primary level).
+    ``msoa`` - Middle Super Output Area (Industry / Jobs dashboards).
+    ``lsoa`` - Lower Super Output Area (Neighbourhoods dashboard).
 
     Breakdown dimension
     -------------------
@@ -118,7 +118,7 @@ class Indicator(Base):
     """Hierarchy level: ``'lad'``, ``'msoa'``, or ``'lsoa'``."""
 
     lad_code: Mapped[str] = mapped_column(String(9), nullable=False)
-    """Parent LAD GSS code — for roll-up queries across all geography levels.
+    """Parent LAD GSS code - for roll-up queries across all geography levels.
     Equals ``geography_code`` for LAD-level rows."""
 
     lad_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -140,6 +140,9 @@ class Indicator(Base):
 
     dataset_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     """Dataset / series code within the source system."""
+
+    subdomain: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    """Dashboard subdomain grouping, e.g. ``"Employment and Jobs"``."""
 
     # --- Breakdown dimension -----------------------------------------------
 
@@ -392,14 +395,14 @@ class IndustryBusinessKpi(Base):
 
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # --- Geography — '' for higher-level aggregates ------------------------
+    # --- Geography - '' for higher-level aggregates ------------------------
 
     lad_code: Mapped[str] = mapped_column(String(9), nullable=False, server_default="''")
     lad_name: Mapped[str] = mapped_column(String(100), nullable=False, server_default="''")
     msoa_code: Mapped[str] = mapped_column(String(9), nullable=False, server_default="''")
     msoa_name: Mapped[str] = mapped_column(String(100), nullable=False, server_default="''")
 
-    # --- Breakdown — '' when not applicable --------------------------------
+    # --- Breakdown - '' when not applicable --------------------------------
 
     industry: Mapped[str] = mapped_column(String(200), nullable=False, server_default="''")
     turnover_band: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -441,6 +444,58 @@ class IndustryBusinessKpi(Base):
         ),
         Index("ix_industry_kpi_lad_code", "lad_code"),
         Index("ix_industry_kpi_year", "year"),
+    )
+
+
+class Correlation(Base):
+    """Pre-computed Spearman correlations between all pairs of Observatory indicators.
+
+    Populated by utils/compute_correlations.py. Covers all (indicator_1, indicator_2)
+    pairs including self-pairs (rho=1) and symmetric duplicates, matching the output
+    of the original R analysis.
+
+    Upsert key: (indicator_1_id, indicator_2_id).
+    """
+
+    __tablename__ = "correlations"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+
+    indicator_1_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    """Machine-readable identifier of the first indicator, e.g. ``"employment_rate"``."""
+
+    indicator_2_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    """Machine-readable identifier of the second indicator."""
+
+    indicator_1_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    """Human-readable display name of the first indicator."""
+
+    indicator_2_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    """Human-readable display name of the second indicator."""
+
+    spearman_rho: Mapped[float | None] = mapped_column(nullable=True)
+    """Spearman rank correlation coefficient. NULL if fewer than 3 complete observations."""
+
+    p_value: Mapped[float | None] = mapped_column(nullable=True)
+    """Two-tailed p-value for the hypothesis test that rho=0."""
+
+    is_significant: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
+    """True when p_value < 0.05."""
+
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    """Plain-English interpretation of the correlation strength and direction."""
+
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_correlations_upsert_key",
+            "indicator_1_id",
+            "indicator_2_id",
+            unique=True,
+        ),
     )
 
 

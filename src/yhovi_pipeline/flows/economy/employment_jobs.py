@@ -27,24 +27,28 @@ APS_DATASETS: dict[str, dict[str, str]] = {
         "indicator_name": "Employment rate",
         "dataset_code": "eejer",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
     "unemployment_rate": {
         "indicator_id": "unemployment_rate",
         "indicator_name": "Unemployment rate",
         "dataset_code": "eejur",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
     "self_employment_rate": {
         "indicator_id": "self_employment_rate",
         "indicator_name": "Self-employment rate",
         "dataset_code": "eejse",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
     "econ_inactive_rate": {
-        "indicator_id": "econ_inactive_want_job",
-        "indicator_name": "Percentage of economically inactive who want a job",
+        "indicator_id": "economic_inactivity_rate",
+        "indicator_name": "Percentage who are economically inactive - aged 16-64",
         "dataset_code": "eejeir",
         "unit": "%",
+        "subdomain": "Employment and Jobs",
     },
 }
 
@@ -67,7 +71,7 @@ NOMIS_ANNUAL_COLUMNS = [
 
 @flow(
     name="economy-employment-jobs",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Employment & Jobs",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Economy: Employment & Jobs",
     description="Extract employment and jobs data from NOMIS for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -80,7 +84,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
     Indicator schema, and upserts into the PostgreSQL data warehouse.
 
     Args:
-        time: Nomis time parameter — "latest" for most recent period,
+        time: Nomis time parameter - "latest" for most recent period,
             or a range like "2004-12-2024-12" for historical data.
     """
     results: list[dict[str, Any]] = []
@@ -106,6 +110,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
                     indicator_name=meta["indicator_name"],
                     dataset_code=dataset_code,
                     unit=meta["unit"],
+                    subdomain=meta["subdomain"],
                 )
 
                 # Load
@@ -140,14 +145,14 @@ def employment_jobs_flow(time: str = "latest") -> None:
                 results.append(
                     {
                         "Dataset": dataset_code,
-                        "Rows extracted": "—",
-                        "Rows loaded": "—",
+                        "Rows extracted": "-",
+                        "Rows loaded": "-",
                         "Status": "Failed",
                     }
                 )
                 raise
 
-        # Jobs Density (eejjd — ONS NM_57_1, pre-calculated ratio)
+        # Jobs Density (eejjd - ONS NM_57_1, pre-calculated ratio)
         dataset_code = "eejjd"
         try:
             raw_df = extract_jobs_density(time=time)
@@ -164,6 +169,7 @@ def employment_jobs_flow(time: str = "latest") -> None:
                 indicator_name="Number of Jobs per Working-Age Resident (16-64)",
                 dataset_code=dataset_code,
                 unit="ratio",
+                subdomain="Employment and Jobs",
             )
 
             rows_loaded = upsert_indicators(df=indicator_df, dataset_code=dataset_code)
@@ -196,8 +202,8 @@ def employment_jobs_flow(time: str = "latest") -> None:
             results.append(
                 {
                     "Dataset": dataset_code,
-                    "Rows extracted": "—",
-                    "Rows loaded": "—",
+                    "Rows extracted": "-",
+                    "Rows loaded": "-",
                     "Status": "Failed",
                 }
             )

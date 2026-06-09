@@ -16,7 +16,7 @@ from prefect.task_runners import ThreadPoolTaskRunner
 
 @flow(
     name="society-digital-inclusion",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Society: Digital Inclusion",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Society: Digital Inclusion",
     description="Extract Ofcom / DCMS digital inclusion indicators for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -40,6 +40,6 @@ def digital_inclusion_flow() -> None:
     )
     create_markdown_artifact(
         key="run-summary",
-        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        markdown="Static release - no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
         description="Run summary",
     )

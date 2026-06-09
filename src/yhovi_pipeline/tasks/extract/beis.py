@@ -1,7 +1,8 @@
-"""BEIS / DESNZ sub-national energy extract tasks.
+"""DESNZ greenhouse gas emissions extract tasks.
 
-BEIS (now DESNZ) publishes Sub-national Electricity and Gas Consumption
-Statistics at LAD level annually.
+DESNZ publishes UK local authority and regional greenhouse gas emissions
+estimates annually. There is no stable download API; data is loaded manually
+via load_csv.py.
 """
 
 from __future__ import annotations
@@ -11,19 +12,23 @@ from prefect import task
 
 
 @task(
-    name="extract/beis/energy-consumption",
-    description="Extract BEIS sub-national energy consumption data for Yorkshire LADs.",
+    name="extract/desnz/ghg-emissions",
+    description="Extract DESNZ greenhouse gas emissions data for Yorkshire LADs.",
     retries=3,
     retry_delay_seconds=60,
 )
-def extract_energy_consumption(reference_year: int) -> pd.DataFrame:
-    """Fetch sub-national electricity and gas consumption statistics.
+def extract_ghg_emissions(reference_year: int) -> pd.DataFrame:
+    """Fetch DESNZ UK local authority greenhouse gas emissions estimates.
+
+    DESNZ does not provide a machine-readable API for this dataset.
+    Data is loaded manually via load_csv.py when a new edition is published.
 
     Args:
         reference_year: The calendar year to extract.
 
     Returns:
-        DataFrame with electricity and gas consumption for Yorkshire LADs.
+        DataFrame with CO2, CH4, and N2O emissions per capita for Yorkshire LADs.
     """
-    # TODO: implement — download from GOV.UK open data portal
-    raise NotImplementedError("extract_energy_consumption not yet implemented")
+    raise NotImplementedError(
+        "No automated extract available. Load emissions data manually via load_csv.py."
+    )

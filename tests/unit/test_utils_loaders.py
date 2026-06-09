@@ -9,6 +9,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
+import pytest
 
 from yhovi_pipeline.utils.load_industry import (
     _is_gss_code,
@@ -22,6 +23,13 @@ from yhovi_pipeline.utils.seed_geo_lookup import load_geo_lookup
 
 _BRADFORD = "E08000032"
 _LONDON = "E09000001"
+
+
+def _mock_settings_no_shared_drive() -> MagicMock:
+    """Settings mock with shared_drive_path=None for RuntimeError path tests."""
+    s = MagicMock()
+    s.shared_drive_path = None
+    return s
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +101,25 @@ class TestLoadGeoLookup:
             load_geo_lookup(path="dummy.csv")
         conn.execute.assert_called_once()
 
+    def test_raises_when_no_shared_drive_path(self) -> None:
+        with (
+            patch(
+                "yhovi_pipeline.utils.seed_geo_lookup.get_settings",
+                return_value=_mock_settings_no_shared_drive(),
+            ),
+            pytest.raises(RuntimeError, match="SHARED_DRIVE_PATH is not set"),
+        ):
+            load_geo_lookup(path=None)
+
+    def test_uses_shared_drive_path_when_no_path_given(self, test_settings) -> None:
+        engine = _mock_engine()
+        with (
+            patch("yhovi_pipeline.utils.seed_geo_lookup.create_engine", return_value=engine),
+            patch("pandas.read_csv", return_value=_GEO_CSV),
+        ):
+            result = load_geo_lookup(path=None)
+        assert result == 1
+
 
 # ---------------------------------------------------------------------------
 # load_jobs
@@ -147,6 +174,25 @@ class TestLoadJobs:
         ):
             load_jobs(path="dummy.csv")
         conn.execute.assert_called()
+
+    def test_raises_when_no_shared_drive_path(self) -> None:
+        with (
+            patch(
+                "yhovi_pipeline.utils.load_jobs.get_settings",
+                return_value=_mock_settings_no_shared_drive(),
+            ),
+            pytest.raises(RuntimeError, match="SHARED_DRIVE_PATH is not set"),
+        ):
+            load_jobs(path=None)
+
+    def test_uses_shared_drive_path_when_no_path_given(self, test_settings) -> None:
+        engine = _mock_engine()
+        with (
+            patch("yhovi_pipeline.utils.load_jobs.create_engine", return_value=engine),
+            patch("pandas.read_csv", return_value=_JOBS_CSV),
+        ):
+            result = load_jobs(path=None)
+        assert result == 1
 
 
 # ---------------------------------------------------------------------------
@@ -253,6 +299,29 @@ class TestLoadNeighbourhoods:
             load_neighbourhoods(path="dummy.csv")
         conn.execute.assert_called()
 
+    def test_raises_when_no_shared_drive_path(self) -> None:
+        with (
+            patch(
+                "yhovi_pipeline.utils.load_neighbourhoods.get_settings",
+                return_value=_mock_settings_no_shared_drive(),
+            ),
+            pytest.raises(RuntimeError, match="SHARED_DRIVE_PATH is not set"),
+        ):
+            load_neighbourhoods(path=None)
+
+    def test_uses_shared_drive_path_when_no_path_given(self, test_settings) -> None:
+        engine = _mock_engine()
+        with (
+            patch("yhovi_pipeline.utils.load_neighbourhoods.create_engine", return_value=engine),
+            patch("pandas.read_csv", return_value=_LSOA_CSV),
+            patch(
+                "yhovi_pipeline.utils.load_neighbourhoods.get_geo_lookup",
+                return_value=_GEO_LOOKUP,
+            ),
+        ):
+            result = load_neighbourhoods(path=None)
+        assert result == 1
+
 
 # ---------------------------------------------------------------------------
 # load_industry helpers
@@ -279,6 +348,22 @@ _GRANULAR_CSV = pd.DataFrame(
         "Turnover": ["0 to 49k", "0 to 49k"],
         "Year": [2022, 2022],
         "Business": [10, 5],
+    }
+)
+
+_KPI_CSV_GSS = pd.DataFrame(
+    {
+        "Grouping_Level": ["MSOA", "MSOA"],
+        "Year": [2022, 2022],
+        "LAD23NM": ["Bradford", "Bradford"],
+        "MSOA": ["E02000001", "E02000002"],
+        "Industry": ["All", "All"],
+        "Turnover": ["All", "All"],
+        "Business": [50, 60],
+        "Business_Lag3": [45, 55],
+        "Pct_Change_3Y": [11.1, 9.1],
+        "Business_Lag8": [40, 50],
+        "Pct_Change_8Y": [25.0, 20.0],
     }
 )
 
@@ -362,6 +447,29 @@ class TestLoadIndustryBusiness:
             load_industry_business(path="dummy.csv")
         conn.execute.assert_called()
 
+    def test_raises_when_no_shared_drive_path(self) -> None:
+        with (
+            patch(
+                "yhovi_pipeline.utils.load_industry.get_settings",
+                return_value=_mock_settings_no_shared_drive(),
+            ),
+            pytest.raises(RuntimeError, match="SHARED_DRIVE_PATH is not set"),
+        ):
+            load_industry_business(path=None)
+
+    def test_uses_shared_drive_path_when_no_path_given(self, test_settings) -> None:
+        engine = _mock_engine()
+        with (
+            patch("yhovi_pipeline.utils.load_industry.create_engine", return_value=engine),
+            patch("pandas.read_csv", return_value=_GRANULAR_CSV),
+            patch(
+                "yhovi_pipeline.utils.load_industry.get_geo_lookup",
+                return_value=_MSOA_LOOKUP,
+            ),
+        ):
+            result = load_industry_business(path=None)
+        assert result == 1
+
 
 class TestLoadIndustryKpi:
     def test_runs_without_error(self, test_settings) -> None:
@@ -402,3 +510,39 @@ class TestLoadIndustryKpi:
         ):
             load_industry_kpi(path="dummy.csv")
         conn.execute.assert_called()
+
+    def test_handles_gss_msoa_codes(self, test_settings) -> None:
+        engine = _mock_engine()
+        with (
+            patch("yhovi_pipeline.utils.load_industry.create_engine", return_value=engine),
+            patch("pandas.read_csv", return_value=_KPI_CSV_GSS),
+            patch(
+                "yhovi_pipeline.utils.load_industry.get_geo_lookup",
+                return_value=_MSOA_LOOKUP,
+            ),
+        ):
+            result = load_industry_kpi(path="dummy.csv")
+        assert isinstance(result, int)
+
+    def test_raises_when_no_shared_drive_path(self) -> None:
+        with (
+            patch(
+                "yhovi_pipeline.utils.load_industry.get_settings",
+                return_value=_mock_settings_no_shared_drive(),
+            ),
+            pytest.raises(RuntimeError, match="SHARED_DRIVE_PATH is not set"),
+        ):
+            load_industry_kpi(path=None)
+
+    def test_uses_shared_drive_path_when_no_path_given(self, test_settings) -> None:
+        engine = _mock_engine()
+        with (
+            patch("yhovi_pipeline.utils.load_industry.create_engine", return_value=engine),
+            patch("pandas.read_csv", return_value=_KPI_CSV),
+            patch(
+                "yhovi_pipeline.utils.load_industry.get_geo_lookup",
+                return_value=_MSOA_LOOKUP,
+            ),
+        ):
+            result = load_industry_kpi(path=None)
+        assert isinstance(result, int)

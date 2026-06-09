@@ -18,11 +18,12 @@ import re
 from datetime import UTC, date, datetime
 
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.orm import Session
 
 from yhovi_pipeline.config import YORKSHIRE_LAD_CODES, get_settings
-from yhovi_pipeline.db.models import Indicator
+from yhovi_pipeline.db.models import DatasetMetadata, ExtractionStatus, Indicator
 
 # Map dataset codes to their indicator metadata.
 # indicator_id is a short machine-readable key; indicator_name is human-readable.
@@ -49,8 +50,8 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "subdomain": "Employment and Jobs",
     },
     "eejeir": {
-        "indicator_id": "econ_inactive_want_job",
-        "indicator_name": "Percentage of economically inactive who want a job",
+        "indicator_id": "economic_inactivity_rate",
+        "indicator_name": "Percentage who are economically inactive - aged 16-64",
         "unit": "%",
         "source": "nomis",
         "subdomain": "Employment and Jobs",
@@ -62,31 +63,17 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "source": "nomis",
         "subdomain": "Employment and Jobs",
     },
-    "sesq": {
-        "indicator_id": "qualifications_pct",
-        "indicator_name": "Percentage with qualifications",
-        "unit": "%",
-        "source": "nomis",
-        "subdomain": "Education and Skills",
-    },
-    "sesnfq": {
-        "indicator_id": "no_formal_qualifications_pct",
-        "indicator_name": "Percentage with no formal qualifications",
-        "unit": "%",
-        "source": "nomis",
-        "subdomain": "Education and Skills",
-    },
     "ebebs": {
         "indicator_id": "businesses_per_10k",
-        "indicator_name": "Number of Business Counts per 10,000 inhabitants",
+        "indicator_name": "Number of Business Counts per 10000 inhabitants",
         "unit": "per 10k",
         "source": "ons",
         "subdomain": "Business and Economy",
     },
     "ebegva": {
-        "indicator_id": "gva_millions",
-        "indicator_name": "Gross Value Added (£ millions)",
-        "unit": "£m",
+        "indicator_id": "labour_productivity",
+        "indicator_name": "Labour Productivity (Pounds per hour worked)",
+        "unit": "£/hour",
         "source": "ons",
         "subdomain": "Business and Economy",
     },
@@ -99,14 +86,14 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
     },
     "sdau18": {
         "indicator_id": "pct_aged_under_18",
-        "indicator_name": "Percentage of Individuals under 18 years old",
+        "indicator_name": "Percentage of Individuals under 18 Years old",
         "unit": "%",
         "source": "ons",
         "subdomain": "Demographics",
     },
     "sdpop": {
         "indicator_id": "total_population",
-        "indicator_name": "Total population",
+        "indicator_name": "Population (Total number of inhabitants)",
         "unit": "persons",
         "source": "ons",
         "subdomain": "Demographics",
@@ -134,7 +121,7 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
     },
     "swa150plus": {
         "indicator_id": "physically_active_150plus_pct",
-        "indicator_name": "Percentage of adults active for 150+ minutes per week",
+        "indicator_name": "Percentage of adults who are active for 150+ minutes per week",
         "unit": "%",
         "source": "sport_england",
         "subdomain": "Wellbeing",
@@ -148,42 +135,42 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
     },
     "swa30": {
         "indicator_id": "fairly_active_pct",
-        "indicator_name": "Percentage of fairly active adults (30-149 minutes per week)",
+        "indicator_name": "Percentage of fairly active people doing sport for 30-149 minutes per week",
         "unit": "%",
         "source": "sport_england",
         "subdomain": "Wellbeing",
     },
     "swls": {
         "indicator_id": "mean_life_satisfaction",
-        "indicator_name": "Mean life satisfaction score (0-10)",
+        "indicator_name": "Mean life satisfaction (0-10, 10 is good)",
         "unit": "score",
         "source": "ons",
         "subdomain": "Wellbeing",
     },
     "swwl": {
         "indicator_id": "mean_worthwhile_score",
-        "indicator_name": "Mean worthwhile score (0-10)",
+        "indicator_name": "Mean worthwhile score (0-10, 10 is good)",
         "unit": "score",
         "source": "ons",
         "subdomain": "Wellbeing",
     },
     "scsv": {
         "indicator_id": "violence_offences_per_1k",
-        "indicator_name": "Number of violence against the person offences per 1,000 population",
+        "indicator_name": "Violent incidents per 1,000 people",
         "unit": "per 1k",
         "source": "ons",
         "subdomain": "Community Safety",
     },
     "scst": {
         "indicator_id": "theft_offences_per_1k",
-        "indicator_name": "Number of theft offences per 1,000 population",
+        "indicator_name": "Theft offences per 1,000 people",
         "unit": "per 1k",
         "source": "ons",
         "subdomain": "Community Safety",
     },
     "eeigwe": {
         "indicator_id": "avg_weekly_earnings",
-        "indicator_name": "Average weekly earnings (£)",
+        "indicator_name": "Average Weekly Earnings (Pounds)",
         "unit": "£",
         "source": "ashe",
         "subdomain": "Earnings and Income",
@@ -197,42 +184,42 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
     },
     "scp": {
         "indicator_id": "volunteering_sports_pct",
-        "indicator_name": "Percentage of adults volunteering in sports or physical activity",
+        "indicator_name": "Percentage of adults who volunteered in the past 12 months",
         "unit": "%",
         "source": "sport_england",
         "subdomain": "Civic Participation",
     },
     "shomee": {
         "indicator_id": "median_energy_efficiency_score",
-        "indicator_name": "Median energy efficiency score of households",
+        "indicator_name": "Median energy efficiency score of households (more is better)",
         "unit": "score",
         "source": "beis",
         "subdomain": "Housing",
     },
     "eeicli": {
         "indicator_id": "children_low_income_per_10k",
-        "indicator_name": "Children in relative low income households per 10,000",
+        "indicator_name": "Number of children in relative low income households per 10,000 inhabitants",
         "unit": "per 10k",
         "source": "dwp",
         "subdomain": "Earnings and Income",
     },
     "ewrkg": {
         "indicator_id": "household_waste_kg_per_head",
-        "indicator_name": "Household waste (kg) collected per head of population",
+        "indicator_name": "Collected household waste per person (kg)",
         "unit": "kg",
         "source": "defra",
         "subdomain": "Waste and Recycling",
     },
     "ewrr": {
         "indicator_id": "household_waste_recycled_pct",
-        "indicator_name": "Percentage of household waste sent for reuse, recycling or composting",
+        "indicator_name": "Percentage of household waste reused, recycled, or composted",
         "unit": "%",
         "source": "defra",
         "subdomain": "Waste and Recycling",
     },
     "scasla": {
         "indicator_id": "avg_download_speed_mbit",
-        "indicator_name": "Average broadband download speed (Mbit/s)",
+        "indicator_name": "Average download speed (Mbit/s)",
         "unit": "Mbit/s",
         "source": "ofcom",
         "subdomain": "Connectivity",
@@ -246,104 +233,118 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
     },
     "shohar": {
         "indicator_id": "housing_affordability_ratio",
-        "indicator_name": "Housing affordability ratio (median house price to median earnings)",
+        "indicator_name": "Ratio of median house price to median gross annual earnings",
         "unit": "ratio",
         "source": "ons",
         "subdomain": "Housing",
     },
     "shoahc": {
         "indicator_id": "affordable_housing_completions_per_100k",
-        "indicator_name": "Affordable housing completions per 100,000 population",
+        "indicator_name": "Number of Affordable housing completions per 100,000 population",
         "unit": "per 100k",
         "source": "dluhc",
         "subdomain": "Housing",
     },
     "shohwl": {
         "indicator_id": "housing_waiting_list_pct",
-        "indicator_name": "Proportion of households on the housing waiting list",
+        "indicator_name": "Percentage of households on the housing waiting list per 10,000 individuals",
         "unit": "%",
         "source": "dluhc",
         "subdomain": "Housing",
     },
+    "ebebnb": {
+        "indicator_id": "new_business_count",
+        "indicator_name": "Number of New Business",
+        "unit": "count",
+        "source": "ons",
+        "subdomain": "Business and Economy",
+    },
+    "ebebdb": {
+        "indicator_id": "business_deaths_count",
+        "indicator_name": "Deaths of Businesses",
+        "unit": "count",
+        "source": "ons",
+        "subdomain": "Business and Economy",
+    },
     "ebebcr": {
-        "indicator_id": "business_churn_rate_per_10k",
-        "indicator_name": "Registered business churn rate per 10,000 population",
+        "indicator_id": "business_churn_rate_per_100k",
+        "indicator_name": "Business Churn Rate per 100,000 inhabitants",
         "unit": "per 10k",
         "source": "ons",
         "subdomain": "Business and Economy",
     },
     "ebegvala": {
         "indicator_id": "gva_per_la",
-        "indicator_name": "Gross Value Added by local authority (£ millions)",
+        "indicator_name": "Gross Value Added in Millions of Pounds",
         "unit": "£m",
         "source": "ons",
         "subdomain": "Business and Economy",
     },
     "eejpip": {
         "indicator_id": "disability_benefits_per_100k",
-        "indicator_name": "Number of people with disability benefits (PIP) per 100,000 residents",
+        "indicator_name": "Number of People with Disability Benefits per 100,000 Residents",
         "unit": "per 100k",
         "source": "dwp",
         "subdomain": "Employment and Jobs",
     },
     "sheu75": {
         "indicator_id": "under75_preventable_mortality_rate",
-        "indicator_name": "Under 75 mortality rate from preventable causes (per 100,000)",
+        "indicator_name": "Deaths under 75 from preventable causes (per 100,000)",
         "unit": "per 100k",
         "source": "phe",
         "subdomain": "Health",
     },
     "sheleb_m": {
         "indicator_id": "male_life_expectancy",
-        "indicator_name": "Male life expectancy at birth (years)",
+        "indicator_name": "Male life expectancy (years)",
         "unit": "years",
         "source": "phe",
         "subdomain": "Health",
     },
     "sheleb_f": {
         "indicator_id": "female_life_expectancy",
-        "indicator_name": "Female life expectancy at birth (years)",
+        "indicator_name": "Female life expectancy (years)",
         "unit": "years",
         "source": "phe",
         "subdomain": "Health",
     },
     "shehle_m": {
         "indicator_id": "male_healthy_life_expectancy",
-        "indicator_name": "Male healthy life expectancy at birth (years)",
+        "indicator_name": "Male healthy life expectancy (years)",
         "unit": "years",
         "source": "phe",
         "subdomain": "Health",
     },
     "shehle_f": {
         "indicator_id": "female_healthy_life_expectancy",
-        "indicator_name": "Female healthy life expectancy at birth (years)",
+        "indicator_name": "Female healthy life expectancy (years)",
         "unit": "years",
         "source": "phe",
         "subdomain": "Health",
     },
     "enz_co2": {
-        "indicator_id": "co2_emissions_per_capita",
-        "indicator_name": "Tonnes of CO2 emissions per capita per year",
+        "indicator_id": "enz_co2",
+        "indicator_name": "Tonnes of carbon dioxide (CO2) emissions per capita per year",
         "unit": "tonnes",
         "source": "beis",
         "subdomain": "Net Zero",
     },
     "enz_ch4": {
-        "indicator_id": "methane_emissions_per_capita",
+        "indicator_id": "enz_ch4",
         "indicator_name": "Tonnes of methane emissions (CO2e) per capita per year",
         "unit": "tonnes CO2e",
         "source": "beis",
         "subdomain": "Net Zero",
     },
     "enz_n2o": {
-        "indicator_id": "nitrous_oxide_emissions_per_capita",
+        "indicator_id": "enz_n2o",
         "indicator_name": "Tonnes of nitrous oxide emissions (CO2e) per capita per year",
         "unit": "tonnes CO2e",
         "source": "beis",
         "subdomain": "Net Zero",
     },
     # -----------------------------------------------------------------------
-    # Employment and Jobs — APS: economically inactive breakdown
+    # Employment and Jobs - APS: economically inactive breakdown
     # EEJPEI splits into two indicators on disk (eejpei_w / eejpei_dw).
     # -----------------------------------------------------------------------
     "eejpei_w": {
@@ -355,7 +356,7 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
     },
     "eejpei_dw": {
         "indicator_id": "econ_inactive_not_want_job_pct",
-        "indicator_name": "Percentage of economically inactive who do not want a job",
+        "indicator_name": "Percentage of economically inactive who don't want a job",
         "unit": "%",
         "source": "nomis",
         "subdomain": "Employment and Jobs",
@@ -435,6 +436,7 @@ def wide_to_long(df: pd.DataFrame, dataset_code: str) -> pd.DataFrame:
             "unit": meta["unit"],
             "source": meta["source"],
             "dataset_code": dataset_code,
+            "subdomain": meta["subdomain"],
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -485,6 +487,7 @@ def load_dataset(path: str, dataset_code: str) -> int:
             "unit": stmt.excluded.unit,
             "source": stmt.excluded.source,
             "dataset_code": stmt.excluded.dataset_code,
+            "subdomain": stmt.excluded.subdomain,
             "updated_at": stmt.excluded.updated_at,
         },
     )
@@ -503,8 +506,6 @@ CSV_FILES: list[tuple[str, str]] = [
     ("eejur", "eejur/eejur_preprocessed_v2.csv"),
     ("eejeir", "eejeir/eejeir_preprocessed_v3.csv"),
     ("eejjd", "eejjd/eejjd_preprocessed_v3.csv"),
-    ("sesq", "sesq/sesq_preprocessed_v1_1.csv"),
-    ("sesnfq", "sesnfq/sesnfq_preprocessed_v1_1.csv"),
     ("ebebs", "ebebs/ebebs_v1_preprocessed.csv"),
     ("ebegva", "ebegva/ebegva_v1_preprocessed.csv"),
     ("sda65", "sda65/sda65_preprocessed_v1_5.csv"),
@@ -528,7 +529,7 @@ CSV_FILES: list[tuple[str, str]] = [
     ("ewrkg", "ewrkg/ewrkg_preprocessing_v1_7.csv"),
     ("ewrr", "ewrr/ewrr_preprocessing_v1_7.csv"),
     ("scasla", "scasla/scasla_preprocessing_v1_1.csv"),
-    ("scpna", "scpna/scpna_preprocessing_v1_1.csv"),
+    ("scpna", "scpna/scpna_preprocessing_v1_4.csv"),
     ("shohar", "shohar/shohar_preprocessed_v1_1.csv"),
     ("shoahc", "shoahc/shoahc_preprocessing_v1_2.csv"),
     ("shohwl", "shohwl/shohwl_preprocessing_v1_2.csv"),
@@ -545,11 +546,13 @@ CSV_FILES: list[tuple[str, str]] = [
     ("eejpei_dw", "eejpei/eejpei_dw/eejpei_dw_preprocessed_v3.csv"),
 ]
 
-BASE_PATH = "/mnt/yhoda_drive/Shared/1_Yorkshire_Vitality_Observatory/data_preprocessing"
+_OBS_SUBDIR = "1_Yorkshire_Vitality_Observatory/data_preprocessing"
 
 
 # Long-format files: (dataset_code, relative path, lad_code_col, lad_name_col, year_col, value_col)
 LONG_CSV_FILES: list[tuple[str, str, str, str, str, str]] = [
+    ("ebebnb", "ebebcr/ebebcr_preprocessed_v2.csv", "LAD23CD", "LocalAuthority", "Year", "Births"),
+    ("ebebdb", "ebebcr/ebebcr_preprocessed_v2.csv", "LAD23CD", "LocalAuthority", "Year", "Deaths"),
     (
         "ebebcr",
         "ebebcr/ebebcr_preprocessed_v2.csv",
@@ -608,6 +611,7 @@ def load_long_dataset(
             "unit": meta["unit"],
             "source": meta["source"],
             "dataset_code": dataset_code,
+            "subdomain": meta["subdomain"],
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -640,6 +644,7 @@ def load_long_dataset(
             "unit": stmt.excluded.unit,
             "source": stmt.excluded.source,
             "dataset_code": stmt.excluded.dataset_code,
+            "subdomain": stmt.excluded.subdomain,
             "updated_at": stmt.excluded.updated_at,
         },
     )
@@ -651,28 +656,69 @@ def load_long_dataset(
     return len(records)
 
 
+def _write_csv_metadata(
+    engine: Engine,
+    dataset_code: str,
+    status: ExtractionStatus,
+    rows_loaded: int | None = None,
+    error_message: str | None = None,
+) -> None:
+    source = DATASET_REGISTRY[dataset_code]["source"]
+    now = datetime.now(UTC)
+    record = DatasetMetadata(
+        dataset_code=dataset_code,
+        source=source,
+        extraction_status=status,
+        rows_extracted=rows_loaded,
+        rows_loaded=rows_loaded,
+        extracted_at=now if status == ExtractionStatus.SUCCESS else None,
+        loaded_at=now if rows_loaded else None,
+        error_message=error_message,
+        created_at=now,
+    )
+    with Session(engine) as session:
+        session.add(record)
+        session.commit()
+
+
 def load_all() -> None:
     """Load all available preprocessed CSVs into the database."""
+    shared = get_settings().shared_drive_path
+    if not shared:
+        raise RuntimeError(
+            "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+        )
+    base_path = f"{shared}/{_OBS_SUBDIR}"
+    engine = create_engine(get_settings().database_url.get_secret_value())
+
     total = 0
     for dataset_code, rel_path in CSV_FILES:
-        path = f"{BASE_PATH}/{rel_path}"
+        path = f"{base_path}/{rel_path}"
         print(f"Loading {dataset_code} from {path}...")
         try:
             count = load_dataset(path, dataset_code)
             total += count
+            _write_csv_metadata(engine, dataset_code, ExtractionStatus.SUCCESS, rows_loaded=count)
         except Exception as e:
             print(f"  ERROR loading {dataset_code}: {e}")
+            _write_csv_metadata(
+                engine, dataset_code, ExtractionStatus.FAILED, error_message=str(e)[:500]
+            )
 
     for dataset_code, rel_path, lad_code_col, lad_name_col, year_col, value_col in LONG_CSV_FILES:
-        path = f"{BASE_PATH}/{rel_path}"
+        path = f"{base_path}/{rel_path}"
         print(f"Loading {dataset_code} from {path}...")
         try:
             count = load_long_dataset(
                 path, dataset_code, lad_code_col, lad_name_col, year_col, value_col
             )
             total += count
+            _write_csv_metadata(engine, dataset_code, ExtractionStatus.SUCCESS, rows_loaded=count)
         except Exception as e:
             print(f"  ERROR loading {dataset_code}: {e}")
+            _write_csv_metadata(
+                engine, dataset_code, ExtractionStatus.FAILED, error_message=str(e)[:500]
+            )
 
     print(f"\nDone. Total rows upserted: {total}")
 

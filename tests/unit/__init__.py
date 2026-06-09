@@ -1,1 +1,1 @@
-"""Unit tests — no external dependencies required."""
+"""Unit tests - no external dependencies required."""

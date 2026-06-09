@@ -54,10 +54,6 @@ deployments:
     entrypoint: src/yhovi_pipeline/flows/society/housing_tenure.py:housing_tenure_flow
     tags: ["society"]
     <<: *common
-  - name: society-deprivation-imd
-    entrypoint: src/yhovi_pipeline/flows/society/deprivation_imd.py:deprivation_imd_flow
-    tags: ["society"]
-    <<: *common
   - name: society-crime-statistics
     entrypoint: src/yhovi_pipeline/flows/society/crime_statistics.py:crime_statistics_flow
     tags: ["society"]
@@ -71,10 +67,6 @@ deployments:
     tags: ["society"]
     <<: *common
   # -- Environment flows ------------------------------------------------------
-  - name: environment-air-quality
-    entrypoint: src/yhovi_pipeline/flows/environment/air_quality.py:air_quality_flow
-    tags: ["environment"]
-    <<: *common
   - name: environment-energy-consumption
     entrypoint: src/yhovi_pipeline/flows/environment/energy_consumption.py:energy_consumption_flow
     tags: ["environment"]

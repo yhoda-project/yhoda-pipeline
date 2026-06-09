@@ -17,7 +17,7 @@ from prefect.task_runners import ThreadPoolTaskRunner
 @flow(
     name="environment-energy-consumption",
     flow_run_name=lambda **_: (
-        datetime.now().strftime("%B %Y") + " — Environment: Energy Consumption"
+        datetime.now().strftime("%B %Y") + " - Environment: Energy Consumption"
     ),
     description="Extract BEIS sub-national energy consumption data for Yorkshire LADs.",
     retries=1,
@@ -42,6 +42,6 @@ def energy_consumption_flow() -> None:
     )
     create_markdown_artifact(
         key="run-summary",
-        markdown="Static release — no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
+        markdown="Static release - no automated extract. Reload manually via `load_csv.py` when a new edition is published.",
         description="Run summary",
     )

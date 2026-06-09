@@ -1,4 +1,4 @@
-﻿# Re-run a Flow Manually
+# Re-run a Flow Manually
 
 You might want to re-run a flow outside its monthly schedule to:
 

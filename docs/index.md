@@ -1,4 +1,4 @@
-﻿# YHODA Pipeline Documentation
+# YHODA Pipeline Documentation
 
 This site documents the YHODA data pipeline - the automated system that collects, validates, and stores socioeconomic, health, and environmental data for Yorkshire, powering the [Yorkshire Vitality Suite](https://yorkshireportal.org/vitality-suite) dashboards.
 
@@ -21,6 +21,12 @@ The database feeds directly into the [Yorkshire Vitality Suite Power BI dashboar
 
 These docs are written for the YHODA research team and technical staff who maintain and use the pipeline.
 You do not need to be a software developer, but familiarity with the project and its data will help.
+
+---
+
+## Got a question?
+
+[Ask DeepWiki](https://deepwiki.com/yhoda-project/yhoda-pipeline) — an AI assistant trained on this repository that can answer questions about how the pipeline works, where to find things, and how components fit together.
 
 ---
 

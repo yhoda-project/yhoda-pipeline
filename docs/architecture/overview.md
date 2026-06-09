@@ -1,4 +1,4 @@
-﻿# System Overview
+# System Overview
 
 The YHODA pipeline is an automated data collection system that enables for the collection, transformation and loading
 of Yorkshire indicator datasets.

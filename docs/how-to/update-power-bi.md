@@ -1,4 +1,4 @@
-﻿# Connect Power BI to the Database
+# Connect Power BI to the Database
 
 This guide explains how to connect Power BI Desktop to the YHODA PostgreSQL database.
 

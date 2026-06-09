@@ -1,6 +1,6 @@
-"""Unit tests for the nine static-release stub flows.
+"""Unit tests for the seven static-release stub flows.
 
-Each stub flow logs a message and creates a markdown artifact — no tasks
+Each stub flow logs a message and creates a markdown artifact - no tasks
 are run.  Tests verify the flows execute without error and call
 ``create_markdown_artifact`` exactly once.
 """
@@ -11,10 +11,8 @@ from unittest.mock import MagicMock, patch
 
 from yhovi_pipeline.flows.economy.business_demography import business_demography_flow
 from yhovi_pipeline.flows.economy.gdp_gva import gdp_gva_flow
-from yhovi_pipeline.flows.environment.air_quality import air_quality_flow
 from yhovi_pipeline.flows.environment.energy_consumption import energy_consumption_flow
 from yhovi_pipeline.flows.society.crime_statistics import crime_statistics_flow
-from yhovi_pipeline.flows.society.deprivation_imd import deprivation_imd_flow
 from yhovi_pipeline.flows.society.digital_inclusion import digital_inclusion_flow
 from yhovi_pipeline.flows.society.housing_tenure import housing_tenure_flow
 from yhovi_pipeline.flows.society.physical_activity import physical_activity_flow
@@ -53,17 +51,6 @@ class TestGdpGvaFlow:
         mock_artifact.assert_called_once()
 
 
-class TestAirQualityFlow:
-    _mod = "yhovi_pipeline.flows.environment.air_quality"
-
-    def test_completes_without_error(self) -> None:
-        _run_stub(self._mod, air_quality_flow)
-
-    def test_creates_markdown_artifact(self) -> None:
-        mock_artifact = _run_stub(self._mod, air_quality_flow)
-        mock_artifact.assert_called_once()
-
-
 class TestEnergyConsumptionFlow:
     _mod = "yhovi_pipeline.flows.environment.energy_consumption"
 
@@ -83,17 +70,6 @@ class TestCrimeStatisticsFlow:
 
     def test_creates_markdown_artifact(self) -> None:
         mock_artifact = _run_stub(self._mod, crime_statistics_flow)
-        mock_artifact.assert_called_once()
-
-
-class TestDeprivationImdFlow:
-    _mod = "yhovi_pipeline.flows.society.deprivation_imd"
-
-    def test_completes_without_error(self) -> None:
-        _run_stub(self._mod, deprivation_imd_flow)
-
-    def test_creates_markdown_artifact(self) -> None:
-        mock_artifact = _run_stub(self._mod, deprivation_imd_flow)
         mock_artifact.assert_called_once()
 
 

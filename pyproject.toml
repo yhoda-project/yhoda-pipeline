@@ -21,6 +21,7 @@ dependencies = [
     "pandas>=2.2",
     "openpyxl>=3.1.5",
     "ipython>=9.10.0",
+    "scipy>=1.9",
 ]
 
 [project.optional-dependencies]
@@ -85,7 +86,7 @@ asyncio_mode = "auto"
 addopts = "-v --tb=short"
 filterwarnings = [
     # Prefect emits this when tasks are called directly outside a flow context in
-    # unit tests.  The warning is expected and benign — suppressed here for clarity.
+    # unit tests.  The warning is expected and benign - suppressed here for clarity.
     "ignore:Logger 'prefect\\.task_runs' attempted to send logs:UserWarning",
 ]
 

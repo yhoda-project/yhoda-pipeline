@@ -78,6 +78,7 @@ def upsert_indicators(df: pd.DataFrame, dataset_code: str) -> int:
             "unit": stmt.excluded.unit,
             "source": stmt.excluded.source,
             "dataset_code": stmt.excluded.dataset_code,
+            "subdomain": stmt.excluded.subdomain,
             "is_forecast": stmt.excluded.is_forecast,
             "forecast_model": stmt.excluded.forecast_model,
             "updated_at": stmt.excluded.updated_at,
@@ -170,7 +171,7 @@ def query_population() -> pd.DataFrame:
     df = pd.DataFrame(rows, columns=["lad_code", "year", "population"])
 
     if df.empty:
-        logger.warning("No population data found — load SDPOP before running DWP flows")
+        logger.warning("No population data found - load SDPOP before running DWP flows")
     else:
         logger.info("Loaded population for %d LAD-year combinations", len(df))
 

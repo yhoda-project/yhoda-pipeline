@@ -1,4 +1,4 @@
-﻿# Onboarding
+# Onboarding
 
 This page walks a new developers through everything needed to get set up on the YHODA pipeline.
 
@@ -58,6 +58,7 @@ Open `.env` and fill in your credentials. The table below describes every variab
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | SQLAlchemy connection string for the PostgreSQL database |
+| `SHARED_DRIVE_PATH` | Yes (loaders) | Absolute path to the root of the YHODA shared drive on the VM - required to run any CSV loader |
 | `DWP_API_KEY` | Yes | DWP Stat-Xplore API key - request from the DWP Stat-Xplore portal |
 | `NOMIS_API_KEY` | No | NOMIS API key - public endpoints work without one, but a key removes rate limits |
 | `PREFECT_API_URL` | Yes | URL of the local Prefect server (e.g. `http://127.0.0.1:4200/api`) |

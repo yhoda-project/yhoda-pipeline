@@ -1,4 +1,4 @@
-﻿# API Key Has Expired
+# API Key Has Expired
 
 Use this runbook if a flow is failing with an authentication error (`HTTP 401`, "invalid API key", or similar), or if you need to rotate an API key as a precaution.
 

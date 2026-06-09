@@ -30,8 +30,8 @@ def _parse_nomis_date(date_name: str) -> date:
     """Parse a Nomis DATE_NAME string to a date.
 
     Handles two formats:
-    - Rolling periods: "Jan 2004-Dec 2004" — returns first day of end month.
-    - Plain years: "2023" — returns 1 Jan of that year (ASHE annual data).
+    - Rolling periods: "Jan 2004-Dec 2004" - returns first day of end month.
+    - Plain years: "2023" - returns 1 Jan of that year (ASHE annual data).
 
     Args:
         date_name: Nomis DATE_NAME value.
@@ -68,6 +68,7 @@ def normalise_to_indicator(
     lad_name_col: str,
     value_col: str,
     unit: str | None = None,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Map source-specific columns to the canonical ``Indicator`` schema.
 
@@ -105,6 +106,7 @@ def normalise_to_indicator(
             "unit": unit,
             "source": source,
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -128,6 +130,7 @@ def normalise_nomis_aps(
     indicator_name: str,
     dataset_code: str,
     unit: str = "%",
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform a Nomis APS API response into the Indicator schema.
 
@@ -163,6 +166,7 @@ def normalise_nomis_aps(
             "unit": unit,
             "source": "nomis",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -237,12 +241,13 @@ def normalise_nomis_annual(
     indicator_name: str,
     dataset_code: str,
     unit: str | None = None,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform a 4-column annual Nomis response into the Indicator schema.
 
     Handles Nomis datasets whose API response contains only
-    DATE_NAME, GEOGRAPHY_NAME, GEOGRAPHY_CODE, OBS_VALUE — such as
-    ASHE (NM_99_1) and Jobs Density (NM_57_1) — where DATE_NAME is a
+    DATE_NAME, GEOGRAPHY_NAME, GEOGRAPHY_CODE, OBS_VALUE - such as
+    ASHE (NM_99_1) and Jobs Density (NM_57_1) - where DATE_NAME is a
     plain year string (e.g. "2023").
 
     Args:
@@ -274,6 +279,7 @@ def normalise_nomis_annual(
             "unit": unit,
             "source": "nomis",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -330,17 +336,17 @@ def _parse_fingertips_period(period: str) -> date:
     """
     period = period.strip()
 
-    # "2018 - 20" or "2018-20" — rolling average, take end year
+    # "2018 - 20" or "2018-20" - rolling average, take end year
     m = re.fullmatch(r"(\d{4})\s*-\s*(\d{2})", period)
     if m:
         return date(_resolve_century(int(m.group(1)), int(m.group(2))), 1, 1)
 
-    # "2019/20" — financial year, take end year
+    # "2019/20" - financial year, take end year
     m = re.fullmatch(r"(\d{4})/(\d{2})", period)
     if m:
         return date(_resolve_century(int(m.group(1)), int(m.group(2))), 1, 1)
 
-    # "2021" — single calendar year
+    # "2021" - single calendar year
     if re.fullmatch(r"\d{4}", period):
         return date(int(period), 1, 1)
 
@@ -359,6 +365,7 @@ def normalise_fingertips(
     gender_filter: str,
     age_filter: str,
     unit: str | None = None,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform a Fingertips API response into the canonical Indicator schema.
 
@@ -375,7 +382,7 @@ def normalise_fingertips(
         gender_filter: Value of the ``Sex`` column to keep
             (``"Male"``, ``"Female"``, or ``"Persons"``).
         age_filter: Value of the ``Age`` column to keep (e.g. ``"All ages"``
-            or ``"10+ yrs"``). Varies by indicator — verify from the API
+            or ``"10+ yrs"``). Varies by indicator - verify from the API
             before setting.
         unit: Optional unit of measurement (e.g. ``"Years"``).
 
@@ -401,7 +408,7 @@ def normalise_fingertips(
             f"(dataset_code={dataset_code!r}). Check indicator ID and sex filter."
         )
 
-    # Drop rows with no time period, then cast to str before parsing —
+    # Drop rows with no time period, then cast to str before parsing -
     # Fingertips returns mixed-type columns (some years arrive as integers).
     df = df.dropna(subset=["Time period"]).copy()
     df["reference_period"] = df["Time period"].astype(str).apply(_parse_fingertips_period)
@@ -423,6 +430,7 @@ def normalise_fingertips(
             "unit": unit,
             "source": "fingertips",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,
@@ -467,12 +475,12 @@ def _parse_dwp_period(period_label: str) -> date:
             except ValueError:
                 continue
 
-    # "Jan-26" — PIP monthly format (abbreviated month, 2-digit year)
+    # "Jan-26" - PIP monthly format (abbreviated month, 2-digit year)
     m = re.fullmatch(r"([A-Za-z]{3})-(\d{2})", period_label)
     if m:
         return datetime.strptime(f"01 {m.group(1)} 20{m.group(2)}", "%d %b %Y").date()
 
-    # "2022/23" financial year — resolve to end year
+    # "2022/23" financial year - resolve to end year
     m = re.fullmatch(r"(\d{4})/(\d{2})", period_label)
     if m:
         return date(_resolve_century(int(m.group(1)), int(m.group(2))), 1, 1)
@@ -496,6 +504,7 @@ def normalise_dwp(
     dataset_code: str,
     rate_per: int,
     unit: str,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Transform DWP count data into the Indicator schema as a per-capita rate.
 
@@ -562,6 +571,7 @@ def normalise_dwp(
             "unit": unit,
             "source": "dwp",
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,

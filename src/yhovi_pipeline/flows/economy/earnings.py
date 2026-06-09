@@ -27,7 +27,7 @@ ASHE_COLUMNS = ["DATE_NAME", "GEOGRAPHY_NAME", "GEOGRAPHY_CODE", "OBS_VALUE"]
 
 @flow(
     name="economy-earnings",
-    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " — Economy: Earnings",
+    flow_run_name=lambda **_: datetime.now().strftime("%B %Y") + " - Economy: Earnings",
     description="Extract median gross weekly earnings from NOMIS ASHE for Yorkshire LADs.",
     retries=1,
     retry_delay_seconds=300,
@@ -41,7 +41,7 @@ def earnings_flow(time: str = "latest") -> None:
     data warehouse.
 
     Args:
-        time: Nomis time parameter — "latest" for most recent year, or a
+        time: Nomis time parameter - "latest" for most recent year, or a
             range like "2010,2011,...,2024" for historical data.
     """
     results: list[dict[str, Any]] = []
@@ -87,7 +87,7 @@ def earnings_flow(time: str = "latest") -> None:
         )
         send_failure_alert("economy-earnings", str(e)[:500])
         results.append(
-            {"Dataset": DATASET_CODE, "Rows extracted": "—", "Rows loaded": "—", "Status": "Failed"}
+            {"Dataset": DATASET_CODE, "Rows extracted": "-", "Rows loaded": "-", "Status": "Failed"}
         )
         raise
     finally:

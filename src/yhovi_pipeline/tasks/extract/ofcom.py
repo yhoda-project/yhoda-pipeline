@@ -25,5 +25,7 @@ def extract_connected_nations(reference_year: int) -> pd.DataFrame:
     Returns:
         DataFrame with broadband coverage and speed data for Yorkshire LADs.
     """
-    # TODO: implement — download from Ofcom open data portal
-    raise NotImplementedError("extract_connected_nations not yet implemented")
+    raise NotImplementedError(
+        "No automated extract available. Ofcom Connected Nations data is published as "
+        "an annual ZIP with a URL that changes each year. Load manually via load_csv.py."
+    )

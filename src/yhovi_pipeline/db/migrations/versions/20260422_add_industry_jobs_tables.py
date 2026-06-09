@@ -6,12 +6,12 @@ Create Date: 2026-04-22 09:00:00.000000+00:00
 
 Changes
 -------
-* ``jobs_lsoa`` — LSOA-level employee counts by SIC code for the Jobs
+* ``jobs_lsoa`` - LSOA-level employee counts by SIC code for the Jobs
   dashboard.  Upsert key: ``(lsoa_code, year, sic_code)``.
-* ``industry_business`` — MSOA-level business counts by industry and turnover
+* ``industry_business`` - MSOA-level business counts by industry and turnover
   band for the Industry dashboard.  Upsert key:
   ``(year, msoa_code, industry, turnover_band)``.
-* ``industry_business_kpi`` — pre-aggregated KPI table with 3-year and 8-year
+* ``industry_business_kpi`` - pre-aggregated KPI table with 3-year and 8-year
   percentage change metrics, supporting Yorkshire-wide, LAD, and MSOA
   grouping levels.  Upsert key:
   ``(grouping_level, year, lad_code, msoa_code, industry, turnover_band)``.

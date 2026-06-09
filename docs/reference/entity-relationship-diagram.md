@@ -1,4 +1,4 @@
-﻿# Entity Relationship Diagram
+# Entity Relationship Diagram
 
 This diagram shows the six tables in the YHODA database and how they relate to each other.
 

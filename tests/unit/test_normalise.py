@@ -46,6 +46,7 @@ _INDICATOR_COLS = {
     "unit",
     "source",
     "dataset_code",
+    "subdomain",
     "breakdown_category",
     "is_forecast",
     "forecast_model",
@@ -259,6 +260,25 @@ class TestNormaliseNomisAps:
         )
         assert result["unit"].iloc[0] == "rate"
 
+    def test_subdomain_propagated(self) -> None:
+        result = normalise_nomis_aps.fn(
+            df=_nomis_aps_df(),
+            indicator_id="x",
+            indicator_name="x",
+            dataset_code="x",
+            subdomain="Employment and Jobs",
+        )
+        assert result["subdomain"].iloc[0] == "Employment and Jobs"
+
+    def test_subdomain_defaults_to_none(self) -> None:
+        result = normalise_nomis_aps.fn(
+            df=_nomis_aps_df(),
+            indicator_id="x",
+            indicator_name="x",
+            dataset_code="x",
+        )
+        assert result["subdomain"].iloc[0] is None
+
 
 # ---------------------------------------------------------------------------
 # normalise_nomis_ashe
@@ -404,6 +424,25 @@ class TestNormaliseNomisAnnual:
             unit="ratio",
         )
         assert result["unit"].iloc[0] == "ratio"
+
+    def test_subdomain_propagated(self) -> None:
+        result = normalise_nomis_annual.fn(
+            df=_nomis_annual_df(),
+            indicator_id="x",
+            indicator_name="x",
+            dataset_code="x",
+            subdomain="Employment and Jobs",
+        )
+        assert result["subdomain"].iloc[0] == "Employment and Jobs"
+
+    def test_subdomain_defaults_to_none(self) -> None:
+        result = normalise_nomis_annual.fn(
+            df=_nomis_annual_df(),
+            indicator_id="x",
+            indicator_name="x",
+            dataset_code="x",
+        )
+        assert result["subdomain"].iloc[0] is None
 
 
 # ---------------------------------------------------------------------------
@@ -585,7 +624,7 @@ class TestNormaliseFingertips:
             )
 
     def test_duplicate_key_rows_deduped_keeping_last(self) -> None:
-        """Two rows with the same (indicator_id, lad_code, reference_period) — keep last."""
+        """Two rows with the same (indicator_id, lad_code, reference_period) - keep last."""
         df = pd.concat(
             [
                 _fingertips_df(value=70.0),
@@ -665,6 +704,29 @@ class TestNormaliseFingertips:
             age_filter="All ages",
         )
         assert result["source"].iloc[0] == "fingertips"
+
+    def test_subdomain_propagated(self) -> None:
+        result = normalise_fingertips.fn(
+            df=_fingertips_df(),
+            dataset_code="x",
+            indicator_id="x",
+            indicator_name="x",
+            gender_filter="Persons",
+            age_filter="All ages",
+            subdomain="Health",
+        )
+        assert result["subdomain"].iloc[0] == "Health"
+
+    def test_subdomain_defaults_to_none(self) -> None:
+        result = normalise_fingertips.fn(
+            df=_fingertips_df(),
+            dataset_code="x",
+            indicator_id="x",
+            indicator_name="x",
+            gender_filter="Persons",
+            age_filter="All ages",
+        )
+        assert result["subdomain"].iloc[0] is None
 
     def test_output_has_all_required_indicator_columns(self) -> None:
         result = normalise_fingertips.fn(

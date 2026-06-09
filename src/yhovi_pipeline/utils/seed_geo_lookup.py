@@ -1,8 +1,7 @@
 """Seed the geo_lookup table from the ONS OA→LSOA→MSOA→LAD lookup CSV.
 
-Reads the preprocessed file from the shared drive, deduplicates to one row
-per LSOA (the CSV is OA-level), filters to Yorkshire LADs, and upserts into
-the geo_lookup table.
+Reads the preprocessed OA-level CSV, deduplicates to one row per LSOA,
+filters to Yorkshire LADs, and upserts into the geo_lookup table.
 
 Usage (from the VM)::
 
@@ -19,13 +18,11 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from yhovi_pipeline.config import YORKSHIRE_LAD_CODES, get_settings
 from yhovi_pipeline.db.models import GeoLookup
 
-GEO_CSV_PATH = (
-    "/mnt/yhoda_drive/Shared/1_Yorkshire_Vitality_Observatory"
-    "/data_preprocessing/OA_LSOA_MSOA_LAD/OA_LSOA_MSOA_LAD_v1_5.csv"
-)
+_GEO_SUBDIR = "1_Yorkshire_Vitality_Observatory/data_preprocessing/OA_LSOA_MSOA_LAD"
+_GEO_FILENAME = "OA_LSOA_MSOA_LAD_v1_5.csv"
 
 
-def load_geo_lookup(path: str = GEO_CSV_PATH) -> int:
+def load_geo_lookup(path: str | None = None) -> int:
     """Seed the geo_lookup table from the ONS geography CSV.
 
     Args:
@@ -35,6 +32,12 @@ def load_geo_lookup(path: str = GEO_CSV_PATH) -> int:
         Number of rows upserted.
     """
     settings = get_settings()
+    if path is None:
+        if not settings.shared_drive_path:
+            raise RuntimeError(
+                "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
+            )
+        path = f"{settings.shared_drive_path}/{_GEO_SUBDIR}/{_GEO_FILENAME}"
     engine = create_engine(settings.database_url.get_secret_value())
 
     df = pd.read_csv(
@@ -62,7 +65,7 @@ def load_geo_lookup(path: str = GEO_CSV_PATH) -> int:
     ]
 
     if not records:
-        print("No Yorkshire LSOAs found — check LAD codes in CSV.")
+        print("No Yorkshire LSOAs found - check LAD codes in CSV.")
         return 0
 
     stmt = pg_insert(GeoLookup).values(records)

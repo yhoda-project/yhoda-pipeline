@@ -1,4 +1,4 @@
-﻿# Environment Variables
+# Environment Variables
 
 All configuration for the pipeline is set via environment variables in the `.env` file on the VM. Copy `.env.example` to `.env` and fill in the values.
 
@@ -9,6 +9,7 @@ Never commit `.env` to GitHub - it contains credentials and is already listed in
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | - | PostgreSQL connection string. Format: `postgresql+psycopg2://user:password@host:5432/dbname` |
+| `SHARED_DRIVE_PATH` | Yes (loaders) | - | Absolute path to the root of the YHODA shared drive on the VM. Required to run any CSV loader. Typically `/mnt/yhoda_drive/Shared` |
 | `DWP_API_KEY` | Yes | - | DWP Stat-Xplore API key. Request from [stat-xplore.dwp.gov.uk](https://stat-xplore.dwp.gov.uk/) |
 | `NOMIS_API_KEY` | No | - | NOMIS API key. Public endpoints work without one; the key removes rate limits |
 | `PREFECT_API_URL` | No | - | URL of the self-hosted Prefect server, e.g. `http://127.0.0.1:4200/api` |

@@ -1,4 +1,4 @@
-﻿# Database
+# Database
 
 The pipeline stores all its data in a PostgreSQL database called `yhoda_dev` (staging) or `yhoda_prod` (production). There are six tables.
 
