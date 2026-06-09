@@ -68,6 +68,7 @@ def normalise_to_indicator(
     lad_name_col: str,
     value_col: str,
     unit: str | None = None,
+    subdomain: str | None = None,
 ) -> pd.DataFrame:
     """Map source-specific columns to the canonical ``Indicator`` schema.
 
@@ -105,6 +106,7 @@ def normalise_to_indicator(
             "unit": unit,
             "source": source,
             "dataset_code": dataset_code,
+            "subdomain": subdomain,
             "breakdown_category": "",
             "is_forecast": False,
             "forecast_model": None,

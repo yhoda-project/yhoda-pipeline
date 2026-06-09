@@ -148,6 +148,7 @@ class TestWideToLong:
             assert "indicator_name" in DATASET_REGISTRY[code]
             assert "unit" in DATASET_REGISTRY[code]
             assert "source" in DATASET_REGISTRY[code]
+            assert "subdomain" in DATASET_REGISTRY[code]
 
 
 def _mock_engine() -> MagicMock:
