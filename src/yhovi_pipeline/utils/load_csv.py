@@ -361,6 +361,27 @@ DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "source": "nomis",
         "subdomain": "Employment and Jobs",
     },
+    "eei10": {
+        "indicator_id": "earnings_10th_percentile",
+        "indicator_name": "10th percentile of earnings",
+        "unit": "£/week",
+        "source": "ons",
+        "subdomain": "Earnings and Income",
+    },
+    "eei80": {
+        "indicator_id": "earnings_80th_percentile",
+        "indicator_name": "80th percentile of earnings",
+        "unit": "£/week",
+        "source": "ons",
+        "subdomain": "Earnings and Income",
+    },
+    "eeiratio": {
+        "indicator_id": "earnings_p80_p10_ratio",
+        "indicator_name": "P80/P10 ratio",
+        "unit": "ratio",
+        "source": "ons",
+        "subdomain": "Earnings and Income",
+    },
 }
 
 
@@ -547,6 +568,9 @@ CSV_FILES: list[tuple[str, str]] = [
 ]
 
 _OBS_SUBDIR = "1_Yorkshire_Vitality_Observatory/data_preprocessing"
+_EEIGI_SUBDIR = (
+    "1_Yorkshire_Vitality_Observatory/3_Data Transformation/data_preprocessing (3)/eeigi (1)"
+)
 
 
 # Long-format files: (dataset_code, relative path, lad_code_col, lad_name_col, year_col, value_col)
@@ -681,6 +705,100 @@ def _write_csv_metadata(
         session.commit()
 
 
+def _load_eeiratio(engine: Engine, shared: str) -> int:
+    """Compute P80/P10 ratio from the two ASHE percentile CSVs and upsert it."""
+    eeigi_base = f"{shared}/{_EEIGI_SUBDIR}"
+    path_10 = f"{eeigi_base}/10percentile (1)/eeigi_10_preprocessing_v1_5 (1).csv"
+    path_80 = f"{eeigi_base}/80percentile (1)/eeigi_80_preprocessing_v1_5 (1).csv"
+
+    df10 = read_wide_csv(path_10)
+    df80 = read_wide_csv(path_80)
+
+    df10 = df10.rename(
+        columns={"LAD_Name.x": "LAD_Name", "Area Names": "LAD_Name", "Area Codes": "LAD_Code"}
+    )
+    df80 = df80.rename(
+        columns={"LAD_Name.x": "LAD_Name", "Area Names": "LAD_Name", "Area Codes": "LAD_Code"}
+    )
+
+    year_cols = [c for c in df10.columns if c not in ("LAD_Name", "LAD_Code")]
+
+    df10 = df10[df10["LAD_Code"].isin(YORKSHIRE_LAD_CODES)].set_index("LAD_Code")
+    df80 = df80[df80["LAD_Code"].isin(YORKSHIRE_LAD_CODES)].set_index("LAD_Code")
+
+    ratio = df80[year_cols].div(df10[year_cols])
+    ratio["LAD_Name"] = df80["LAD_Name"]
+    ratio = ratio.reset_index()
+
+    meta = DATASET_REGISTRY["eeiratio"]
+    now = datetime.now(UTC)
+    long = ratio.melt(
+        id_vars=["LAD_Code", "LAD_Name"],
+        value_vars=year_cols,
+        var_name="year",
+        value_name="value",
+    )
+    long["year"] = long["year"].apply(_extract_year)
+    long = long.dropna(subset=["value"])
+
+    result = pd.DataFrame(
+        {
+            "indicator_id": meta["indicator_id"],
+            "indicator_name": meta["indicator_name"],
+            "geography_code": long["LAD_Code"],
+            "geography_name": long["LAD_Name"],
+            "geography_level": "lad",
+            "lad_code": long["LAD_Code"],
+            "lad_name": long["LAD_Name"],
+            "reference_period": long["year"].apply(lambda y: date(y, 1, 1)),
+            "value": long["value"].astype(float),
+            "unit": meta["unit"],
+            "source": meta["source"],
+            "dataset_code": "eeiratio",
+            "subdomain": meta["subdomain"],
+            "breakdown_category": "",
+            "is_forecast": False,
+            "forecast_model": None,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+
+    records = result.to_dict(orient="records")
+    if not records:
+        print("  No records for eeiratio")
+        return 0
+
+    stmt = pg_insert(Indicator).values(records)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[
+            "indicator_id",
+            "geography_code",
+            "reference_period",
+            "breakdown_category",
+        ],
+        set_={
+            "indicator_name": stmt.excluded.indicator_name,
+            "geography_name": stmt.excluded.geography_name,
+            "geography_level": stmt.excluded.geography_level,
+            "lad_code": stmt.excluded.lad_code,
+            "lad_name": stmt.excluded.lad_name,
+            "value": stmt.excluded.value,
+            "unit": stmt.excluded.unit,
+            "source": stmt.excluded.source,
+            "dataset_code": stmt.excluded.dataset_code,
+            "subdomain": stmt.excluded.subdomain,
+            "updated_at": stmt.excluded.updated_at,
+        },
+    )
+
+    with engine.begin() as conn:
+        conn.execute(stmt)
+
+    print(f"  Upserted {len(records)} rows for eeiratio")
+    return len(records)
+
+
 def load_all() -> None:
     """Load all available preprocessed CSVs into the database."""
     shared = get_settings().shared_drive_path
@@ -689,6 +807,7 @@ def load_all() -> None:
             "SHARED_DRIVE_PATH is not set. Add it to .env before running this script."
         )
     base_path = f"{shared}/{_OBS_SUBDIR}"
+    eeigi_base = f"{shared}/{_EEIGI_SUBDIR}"
     engine = create_engine(get_settings().database_url.get_secret_value())
 
     total = 0
@@ -719,6 +838,33 @@ def load_all() -> None:
             _write_csv_metadata(
                 engine, dataset_code, ExtractionStatus.FAILED, error_message=str(e)[:500]
             )
+
+    # EEI10 and EEI80: wide CSVs in the eeigi subdirectory
+    eeigi_csv_files = [
+        ("eei10", f"{eeigi_base}/10percentile (1)/eeigi_10_preprocessing_v1_5 (1).csv"),
+        ("eei80", f"{eeigi_base}/80percentile (1)/eeigi_80_preprocessing_v1_5 (1).csv"),
+    ]
+    for dataset_code, path in eeigi_csv_files:
+        print(f"Loading {dataset_code} from {path}...")
+        try:
+            count = load_dataset(path, dataset_code)
+            total += count
+            _write_csv_metadata(engine, dataset_code, ExtractionStatus.SUCCESS, rows_loaded=count)
+        except Exception as e:
+            print(f"  ERROR loading {dataset_code}: {e}")
+            _write_csv_metadata(
+                engine, dataset_code, ExtractionStatus.FAILED, error_message=str(e)[:500]
+            )
+
+    # EEIRATIO: derived from eei80 / eei10
+    print("Computing eeiratio from eei80 / eei10...")
+    try:
+        count = _load_eeiratio(engine, shared)
+        total += count
+        _write_csv_metadata(engine, "eeiratio", ExtractionStatus.SUCCESS, rows_loaded=count)
+    except Exception as e:
+        print(f"  ERROR loading eeiratio: {e}")
+        _write_csv_metadata(engine, "eeiratio", ExtractionStatus.FAILED, error_message=str(e)[:500])
 
     print(f"\nDone. Total rows upserted: {total}")
 

@@ -12,6 +12,7 @@ from yhovi_pipeline.db.models import ExtractionStatus
 from yhovi_pipeline.utils.load_csv import (
     DATASET_REGISTRY,
     _extract_year,
+    _load_eeiratio,
     _write_csv_metadata,
     load_all,
     load_dataset,
@@ -279,6 +280,7 @@ class TestLoadAll:
         with (
             patch(f"{self._mod}.load_dataset", return_value=10) as mock_wide,
             patch(f"{self._mod}.load_long_dataset", return_value=5),
+            patch(f"{self._mod}._load_eeiratio", return_value=10),
             patch(f"{self._mod}._write_csv_metadata"),
             patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
@@ -289,6 +291,7 @@ class TestLoadAll:
         with (
             patch(f"{self._mod}.load_dataset", return_value=10),
             patch(f"{self._mod}.load_long_dataset", return_value=5) as mock_long,
+            patch(f"{self._mod}._load_eeiratio", return_value=10),
             patch(f"{self._mod}._write_csv_metadata"),
             patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
@@ -299,6 +302,7 @@ class TestLoadAll:
         with (
             patch(f"{self._mod}.load_dataset", side_effect=Exception("fail")),
             patch(f"{self._mod}.load_long_dataset", return_value=0),
+            patch(f"{self._mod}._load_eeiratio", return_value=0),
             patch(f"{self._mod}._write_csv_metadata"),
             patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
@@ -308,6 +312,7 @@ class TestLoadAll:
         with (
             patch(f"{self._mod}.load_dataset", return_value=10),
             patch(f"{self._mod}.load_long_dataset", return_value=5),
+            patch(f"{self._mod}._load_eeiratio", return_value=10),
             patch(f"{self._mod}._write_csv_metadata") as mock_meta,
             patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
@@ -321,6 +326,7 @@ class TestLoadAll:
         with (
             patch(f"{self._mod}.load_dataset", side_effect=Exception("boom")),
             patch(f"{self._mod}.load_long_dataset", return_value=0),
+            patch(f"{self._mod}._load_eeiratio", return_value=0),
             patch(f"{self._mod}._write_csv_metadata") as mock_meta,
             patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
@@ -332,9 +338,92 @@ class TestLoadAll:
         with (
             patch(f"{self._mod}.load_dataset", return_value=10),
             patch(f"{self._mod}.load_long_dataset", side_effect=Exception("long fail")),
+            patch(f"{self._mod}._load_eeiratio", return_value=10),
             patch(f"{self._mod}._write_csv_metadata") as mock_meta,
             patch(f"{self._mod}.create_engine", return_value=MagicMock()),
         ):
             load_all()
         failed_calls = [c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.FAILED]
         assert len(failed_calls) > 0
+
+    def test_calls_load_eeiratio(self, test_settings) -> None:
+        with (
+            patch(f"{self._mod}.load_dataset", return_value=10),
+            patch(f"{self._mod}.load_long_dataset", return_value=5),
+            patch(f"{self._mod}._load_eeiratio", return_value=10) as mock_ratio,
+            patch(f"{self._mod}._write_csv_metadata"),
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
+        ):
+            load_all()
+        mock_ratio.assert_called_once()
+
+    def test_writes_metadata_on_eeiratio_failure(self, test_settings) -> None:
+        with (
+            patch(f"{self._mod}.load_dataset", return_value=10),
+            patch(f"{self._mod}.load_long_dataset", return_value=5),
+            patch(f"{self._mod}._load_eeiratio", side_effect=Exception("ratio fail")),
+            patch(f"{self._mod}._write_csv_metadata") as mock_meta,
+            patch(f"{self._mod}.create_engine", return_value=MagicMock()),
+        ):
+            load_all()
+        failed_calls = [c for c in mock_meta.call_args_list if c.args[2] == ExtractionStatus.FAILED]
+        assert any(c.args[1] == "eeiratio" for c in failed_calls)
+
+
+class TestLoadEeiratio:
+    _mod = "yhovi_pipeline.utils.load_csv"
+
+    _DF10 = pd.DataFrame(
+        {
+            "LAD_Name": ["Bradford", "Leeds"],
+            "LAD_Code": [_BRADFORD, _LEEDS],
+            "2021": [300.0, 400.0],
+            "2022": [310.0, 410.0],
+        }
+    )
+    _DF80 = pd.DataFrame(
+        {
+            "LAD_Name": ["Bradford", "Leeds"],
+            "LAD_Code": [_BRADFORD, _LEEDS],
+            "2021": [600.0, 800.0],
+            "2022": [620.0, 820.0],
+        }
+    )
+
+    def test_returns_row_count(self, test_settings) -> None:
+        engine = _mock_engine()
+        with patch(f"{self._mod}.read_wide_csv", side_effect=[self._DF10, self._DF80]):
+            result = _load_eeiratio(engine, "/fake/shared")
+        assert result == 4  # 2 LADs x 2 years
+
+    def test_ratio_is_eei80_divided_by_eei10(self, test_settings) -> None:
+        engine = _mock_engine()
+        records: list[dict] = []
+
+        def capture_execute(stmt):
+            records.extend(
+                stmt.compile(compile_kwargs={"literal_binds": True}).string if False else []
+            )
+
+        with patch(f"{self._mod}.read_wide_csv", side_effect=[self._DF10, self._DF80]):
+            _load_eeiratio(engine, "/fake/shared")
+
+        conn = engine.begin.return_value.__enter__.return_value
+        conn.execute.assert_called_once()
+
+    def test_returns_zero_for_no_yorkshire_lads(self, test_settings) -> None:
+        df10 = pd.DataFrame({"LAD_Name": ["London"], "LAD_Code": [_NON_YORKSHIRE], "2021": [300.0]})
+        df80 = pd.DataFrame({"LAD_Name": ["London"], "LAD_Code": [_NON_YORKSHIRE], "2021": [600.0]})
+        engine = _mock_engine()
+        with patch(f"{self._mod}.read_wide_csv", side_effect=[df10, df80]):
+            result = _load_eeiratio(engine, "/fake/shared")
+        assert result == 0
+
+    def test_indicator_id_is_earnings_p80_p10_ratio(self, test_settings) -> None:
+        assert DATASET_REGISTRY["eeiratio"]["indicator_id"] == "earnings_p80_p10_ratio"
+
+    def test_eei10_and_eei80_in_registry(self) -> None:
+        assert "eei10" in DATASET_REGISTRY
+        assert "eei80" in DATASET_REGISTRY
+        assert DATASET_REGISTRY["eei10"]["unit"] == "£/week"
+        assert DATASET_REGISTRY["eei80"]["unit"] == "£/week"
