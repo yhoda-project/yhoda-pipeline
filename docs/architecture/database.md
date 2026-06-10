@@ -1,6 +1,6 @@
 # Database
 
-The pipeline stores all its data in a PostgreSQL database called `yhoda_dev` (staging) or `yhoda_prod` (production). There are six tables.
+The pipeline stores all its data in a PostgreSQL database called `yhoda_dev` (staging) or `yhoda_prod` (production). There are seven tables.
 
 See [Query the database](../how-to/query-the-database.md) for instructions on connecting and running queries.
 
@@ -62,6 +62,20 @@ Business counts by industry and turnover band at MSOA level. This powers the Ind
 ### `industry_business_kpi`
 
 Pre-calculated business count change statistics - 3-year and 8-year percentage changes - at Yorkshire-wide, LAD, and MSOA level. These figures are calculated when the data is loaded and stored ready for the dashboard to display without further calculation.
+
+---
+
+### `correlations`
+
+Pre-computed pairwise Spearman rank correlations between all Observatory indicators. One row exists for every ordered pair of indicators, including self-pairs (rho = 1) and symmetric duplicates.
+
+Each row stores the Spearman rho, p-value, a flag for statistical significance (p < 0.05), and a plain-English interpretation message ready for display in the dashboard.
+
+This table must be refreshed after any change to the `indicator` table by running:
+
+```bash
+uv run python -m yhovi_pipeline.utils.compute_correlations
+```
 
 ---
 
