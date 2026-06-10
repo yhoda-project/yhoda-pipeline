@@ -1,0 +1,12 @@
+  {% extends "base.html" %}
+
+  {% block extrahead %}
+    {{ super() }}
+    <link rel="icon" type="image/x-icon" href="{{ base_url }}/assets/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ base_url }}/assets/favicons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ base_url }}/assets/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ base_url }}/assets/favicons/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ base_url }}/assets/favicons/android-chrome-512x512.png">
+    <link rel="apple-touch-icon" href="{{ base_url }}/assets/favicons/apple-touchicon.png">
+    <link rel="manifest" href="{{ base_url }}/assets/favicons/site.webmanifest">
+  {% endblock %}
