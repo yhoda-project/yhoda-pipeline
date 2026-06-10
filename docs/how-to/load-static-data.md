@@ -112,6 +112,18 @@ This runs `load_all()`, which iterates over every entry in `CSV_FILES` and `LONG
 
 ---
 
+## Refresh the correlations table
+
+After running `load_all()`, refresh the pre-computed correlations so the dashboard correlation matrix reflects the updated data:
+
+```bash
+uv run python -m yhovi_pipeline.utils.compute_correlations
+```
+
+This recomputes all pairwise Spearman correlations across every indicator in the database and upserts the results. With 50 indicators this produces 2,500 pairs and takes under a minute.
+
+---
+
 ## Verifying the load
 
 Connect to the database (see [Query the database](query-the-database.md)) and run:
