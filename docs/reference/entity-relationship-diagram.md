@@ -1,6 +1,6 @@
 # Entity Relationship Diagram
 
-This diagram shows the six tables in the YHODA database and how they relate to each other.
+This diagram shows the seven tables in the YHODA database and how they relate to each other.
 
 The `geo_lookup` table is the geography dimension - it links the other tables via geography codes. The `dataset_metadata` table links to `indicator` via the `dataset_code` field, allowing any indicator row to be traced back to the pipeline run that loaded it.
 
@@ -109,9 +109,24 @@ erDiagram
     timestamp updated_at
   }
 
+  correlations {
+    int id PK
+    varchar indicator_1_id
+    varchar indicator_2_id
+    varchar indicator_1_name
+    varchar indicator_2_name
+    float spearman_rho
+    float p_value
+    boolean is_significant
+    text message
+    timestamp computed_at
+  }
+
   geo_lookup ||..o{ indicator : "geography_code / lad_code"
   geo_lookup ||..o{ jobs_lsoa : "lsoa_code"
   geo_lookup ||..o{ industry_business : "msoa_code"
   geo_lookup ||..o{ industry_business_kpi : "lad_code"
   dataset_metadata ||..o{ indicator : "dataset_code"
+  indicator ||..o{ correlations : "indicator_id / indicator_1_id"
+  indicator ||..o{ correlations : "indicator_id / indicator_2_id"
 ```
