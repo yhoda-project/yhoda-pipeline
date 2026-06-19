@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/yhoda-project/yhoda-pipeline/compare/yhovi-pipeline-v0.1.4...yhovi-pipeline-v0.1.5) (2026-06-19)
+
+
+### Bug Fixes
+
+* **docs:** add correlations table, correct table count to seven, add compute_correlations step ([#35](https://github.com/yhoda-project/yhoda-pipeline/issues/35)) ([273997a](https://github.com/yhoda-project/yhoda-pipeline/commit/273997a717116831107fa9d5fef4777dfc19341b))
+
 ## [0.1.4](https://github.com/yhoda-project/yhoda-pipeline/compare/yhovi-pipeline-v0.1.3...yhovi-pipeline-v0.1.4) (2026-06-04)
 
 
